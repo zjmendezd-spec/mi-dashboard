@@ -1,0 +1,3042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Funnel FAST · Mercado Pago</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- Funnel FAST v2.6 - Tasas fix -->
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  :root {
+    --mp-blue:#009EE3;--mp-blue-d:#007EB5;--mp-blue-l:#E6F6FD;
+    --mp-teal:#00B1CC;--mp-green:#00A650;--mp-green-l:#E6F7EF;
+    --mp-yellow:#FFE600;--mp-yellow-d:#F5DC00;
+    --bg:#F5F5F5;--surface:#FFFFFF;--surface2:#F0F0F0;
+    --border:rgba(0,0,0,.08);--border-s:rgba(0,0,0,.14);
+    --text:#333333;--text2:#666666;--text3:#999999;
+    --s-cal:#3AADA8;--sb-cal:#E6F7F7;
+    --s-ace:#C97B8A;--sb-ace:#FAF0F2;
+    --s-neg:#D4226E;--sb-neg:#FCEEF5;
+    --s-adq:#C9A84C;--sb-adq:#FAF6E8;
+    --s-rec:#E88C00;--sb-rec:#FFF4E0;
+    --r:12px;--rs:8px;
+    --sh:0 2px 8px rgba(0,0,0,.08);
+    --shm:0 8px 24px rgba(0,0,0,.12);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;}
+  .app{display:flex;min-height:100vh;}
+
+  /* ── Sidebar ── */
+  .sidebar{width:240px;min-width:240px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;}
+
+  .sb-brand{padding:0;border-bottom:1px solid var(--border);background:linear-gradient(135deg,#009EE3 0%,#00B1CC 100%);}
+  .sb-brand-inner{padding:20px 20px 16px;display:flex;align-items:center;gap:12px;}
+  .sb-brand-logo{width:38px;height:38px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.15);}
+  .sb-brand-logo svg{width:24px;height:24px;}
+  .sb-brand-text .title{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px;}
+  .sb-brand-text .sub{font-size:11px;color:rgba(255,255,255,.75);margin-top:1px;}
+  .sb-brand-badge{background:rgba(255,255,255,.15);border-top:1px solid rgba(255,255,255,.1);padding:8px 20px;font-size:11px;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:6px;}
+  .sb-brand-dot{width:6px;height:6px;border-radius:50%;background:#FFE600;flex-shrink:0;}
+
+  .sb-nav{padding:12px 10px;flex:1;}
+  .nav-section{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;padding:8px 10px 4px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);font-size:13px;color:var(--text2);cursor:pointer;transition:all .12s;border:none;background:none;width:100%;text-align:left;font-family:'Inter',sans-serif;}
+  .nav-item:hover{background:var(--bg);color:var(--text);}
+  .nav-item.active{background:var(--mp-blue-l);color:var(--mp-blue);font-weight:600;}
+  .nav-item .nav-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--surface2);}
+  .nav-item.active .nav-icon{background:rgba(0,158,227,.15);}
+  .nav-item.capture-nav .nav-icon{background:linear-gradient(135deg,rgba(0,158,227,.15),rgba(0,166,80,.12));}
+  .nav-item.capture-nav{color:var(--mp-blue);}
+  .nav-status{display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:var(--rs);font-size:13px;color:var(--text2);cursor:pointer;transition:background .12s;border:none;background:none;width:100%;font-family:'Inter',sans-serif;}
+  .nav-status:hover{background:var(--bg);}
+  .status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+  .sb-stats{padding:12px;border-top:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .sstat{background:var(--bg);border-radius:var(--rs);padding:10px 12px;border:1px solid var(--border);}
+  .sstat-val{font-size:20px;font-weight:700;color:var(--text);}
+  .sstat-lbl{font-size:10px;color:var(--text3);margin-top:1px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+
+  /* ── Main ── */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:14px;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.04);}
+  .topbar-left{display:flex;align-items:center;gap:14px;}
+  .topbar-title{font-size:17px;font-weight:700;color:var(--text);white-space:nowrap;}
+  .topbar-search{background:var(--bg);border:1.5px solid var(--border-s);border-radius:24px;padding:8px 14px 8px 36px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);outline:none;transition:all .15s;width:260px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:12px center;}
+  .topbar-search:focus{border-color:var(--mp-blue);background-color:var(--surface);width:300px;}
+  .topbar-actions{display:flex;gap:10px;align-items:center;}
+
+  /* ── Buttons ── */
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:24px;font-size:13px;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;border:none;transition:all .15s;white-space:nowrap;}
+  .btn-primary{background:#FFE600;color:#003087;font-weight:700;}
+  .btn-primary:hover{background:var(--mp-blue-d);transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,158,227,.3);}
+  .btn-ghost{background:transparent;color:var(--text2);border:1.5px solid var(--border-s);}
+  .btn-ghost:hover{background:var(--bg);color:var(--text);}
+  .btn-ai{background:linear-gradient(135deg,#009EE3,#00A650);color:#fff;}
+  .btn-ai:hover{background:linear-gradient(135deg,#007EB5,#007D3C);transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,158,227,.35);}
+  .btn-sm{padding:6px 14px;font-size:12px;}
+  .btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+
+  .content{padding:24px 28px;flex:1;}
+
+  /* ── Hero banner ── */
+  .hero{background:linear-gradient(135deg,#009EE3 0%,#00B1CC 50%,#00A650 100%);border-radius:var(--r);padding:24px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;overflow:hidden;}
+  .hero::before{content:'';position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.07);}
+  .hero::after{content:'';position:absolute;right:60px;bottom:-60px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.05);}
+  .hero-text h2{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;}
+  .hero-text p{font-size:13px;color:rgba(255,255,255,.8);}
+  .hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+  .hero-chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:12px;color:#fff;font-weight:500;}
+  .hero-mp-logo{flex-shrink:0;opacity:.9;z-index:1;}
+
+  /* ── Capture view ── */
+  .capture-card{background:var(--surface);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:20px;border:1px solid var(--border);}
+  .capture-header{padding:18px 22px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#F8FDFF,#F5FFF8);}
+  .capture-icon{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#009EE3,#00A650);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,158,227,.3);}
+  .capture-title{font-size:15px;font-weight:700;}
+  .capture-sub{font-size:12px;color:var(--text3);margin-top:2px;}
+  .capture-body{padding:18px 22px;}
+  .capture-textarea{width:100%;min-height:130px;padding:14px 16px;border:1.5px solid var(--border-s);border-radius:var(--rs);font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);outline:none;resize:vertical;line-height:1.7;transition:border-color .15s;}
+  .capture-textarea:focus{border-color:var(--mp-blue);background:var(--surface);}
+  .capture-footer{padding:14px 22px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid var(--border);background:var(--bg);}
+  .capture-hint{font-size:12px;color:var(--text3);line-height:1.6;}
+  .capture-hint strong{color:var(--text2);}
+
+  /* ── AI thinking / results ── */
+  .ai-thinking{display:none;align-items:center;gap:12px;padding:14px 22px;border-top:1px solid var(--border);background:linear-gradient(135deg,#F0F9FF,#F0FFF6);}
+  .ai-dots{display:flex;gap:5px;align-items:center;}
+  .ai-dot{width:7px;height:7px;border-radius:50%;background:var(--mp-blue);animation:bounce .9s infinite;}
+  .ai-dot:nth-child(2){animation-delay:.15s;background:var(--mp-teal);}
+  .ai-dot:nth-child(3){animation-delay:.3s;background:var(--mp-green);}
+  @keyframes bounce{0%,80%,100%{transform:scale(1);opacity:.4}40%{transform:scale(1.35);opacity:1}}
+  .ai-thinking-text{font-size:13px;color:var(--text2);font-weight:500;}
+  .ai-results{display:none;border-top:1px solid var(--border);}
+  .ai-results-header{padding:12px 22px;background:linear-gradient(135deg,#F0F9FF,#F0FFF6);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+  .ai-results-title{font-size:13px;font-weight:700;}
+  .ai-results-sub{font-size:12px;color:var(--text3);}
+  .ai-result-item{padding:12px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+  .ai-result-item:last-child{border-bottom:none;}
+  .ai-result-info{flex:1;min-width:0;}
+  .ai-result-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .ai-result-meta{font-size:12px;color:var(--text3);margin-top:3px;}
+  .ai-tag{display:inline-flex;align-items:center;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600;}
+  .tag-new{background:#E6F7EF;color:#00A650;}
+  .tag-update{background:#FFF0E6;color:#FF6E00;}
+  .ai-results-footer{padding:12px 22px;background:var(--bg);display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);}
+
+  /* ── Metrics ── */
+  .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px;}
+  .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);transition:transform .15s,box-shadow .15s;}
+  .metric-card:hover{transform:translateY(-2px);box-shadow:var(--shm);}
+  .metric-card .m-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;}
+  .m-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;}
+  .m-value{font-size:30px;font-weight:700;line-height:1;}
+  .m-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+
+  /* ── Cards ── */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:22px;}
+  @media(max-width:900px){.grid-2{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);}
+  .card-header{padding:14px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:space-between;}
+  .card-body{padding:16px 20px;}
+
+  /* ── Funnel ── */
+  .funnel-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;}
+  .funnel-lbl{font-size:12px;color:var(--text2);width:100px;flex-shrink:0;font-weight:500;}
+  .funnel-track{flex:1;background:var(--bg);border-radius:6px;height:26px;overflow:hidden;}
+  .funnel-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 12px;transition:width .6s cubic-bezier(.4,0,.2,1);}
+  .funnel-fill span{font-size:12px;font-weight:700;color:#fff;}
+  .funnel-pct{font-size:12px;color:var(--text3);width:34px;text-align:right;flex-shrink:0;font-weight:500;}
+
+  /* ── Agenda ── */
+  .agenda-date-lbl{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 6px;}
+  .agenda-item{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);gap:8px;cursor:pointer;transition:opacity .1s;}
+  .agenda-item:last-child{border-bottom:none;}
+  .agenda-item:hover{opacity:.8;}
+  .agenda-name{font-size:13px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+
+  /* ── Table ── */
+  .filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .filter-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border-s);background:transparent;color:var(--text2);font-family:'Inter',sans-serif;transition:all .12s;}
+  .filter-chip.active{border-color:var(--mp-blue);background:var(--mp-blue-l);color:var(--mp-blue);}
+  .filter-chip:hover:not(.active){background:var(--bg);}
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);}
+  table{width:100%;border-collapse:collapse;}
+  thead th{background:var(--bg);padding:10px 16px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap;}
+  thead th.sortable{cursor:pointer;user-select:none;transition:color .12s;}
+  thead th.sortable:hover{color:var(--mp-blue);}
+  thead th.sorted{color:var(--mp-blue);}
+  .sort-icon{margin-left:4px;font-style:normal;opacity:.4;}
+  thead th.sorted .sort-icon{opacity:1;}
+  tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+  tbody tr:last-child{border-bottom:none;}
+  tbody tr:hover{background:#FAFAFA;}
+  tbody td{padding:11px 16px;font-size:13px;}
+  .td-name{font-weight:600;}
+  .td-date{color:var(--text3);}
+  .empty{padding:56px;text-align:center;color:var(--text3);font-size:14px;}
+  .dot-new{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mp-blue);margin-right:5px;vertical-align:middle;}
+
+  /* ── Badges ── */
+  .badge{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;letter-spacing:.02em;}
+  .s-cal{color:var(--s-cal);background:var(--sb-cal);}
+  .s-ace{color:var(--s-ace);background:var(--sb-ace);}
+  .s-neg{color:var(--s-neg);background:var(--sb-neg);}
+  .s-adq{color:var(--s-adq);background:var(--sb-adq);}
+  .s-rec{color:var(--s-rec);background:var(--sb-rec);}
+
+  /* ── Modal ── */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .15s;}
+  .modal-overlay.open{opacity:1;pointer-events:all;}
+  .modal{background:var(--surface);border-radius:16px;width:100%;max-width:460px;box-shadow:0 24px 64px rgba(0,0,0,.18);transform:translateY(16px) scale(.98);transition:transform .18s,opacity .15s;max-height:90vh;overflow-y:auto;}
+  .modal-overlay.open .modal{transform:translateY(0) scale(1);}
+  .modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-size:16px;font-weight:700;}
+  .modal-body{padding:20px 24px;}
+  .modal-footer{padding:14px 24px 20px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--border);}
+  .form-group{margin-bottom:16px;}
+  .form-label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+  .form-hint{font-size:11px;color:var(--text3);margin-top:4px;}
+  .form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border:1.5px solid var(--border-s);border-radius:var(--rs);font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;}
+  .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--mp-blue);}
+  .form-textarea{resize:vertical;min-height:72px;}
+  .next-preview{background:var(--sb-ace);border:1.5px solid #99E6C0;border-radius:var(--rs);padding:9px 13px;font-size:12px;color:#00A650;font-weight:600;margin-top:8px;display:none;}
+
+  /* ── Toast ── */
+  .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 18px;border-radius:24px;font-size:13px;font-weight:600;box-shadow:var(--shm);transform:translateY(14px);opacity:0;transition:all .22s;z-index:200;pointer-events:none;max-width:320px;}
+  .toast.show{transform:translateY(0);opacity:1;}
+  .icon-btn{width:32px;height:32px;border-radius:8px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);transition:background .12s,color .12s;flex-shrink:0;}
+  .icon-btn:hover{background:var(--bg);color:var(--text);}
+
+  /* ── Goal tracker ── */
+  .tracker-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh);margin-bottom:22px;overflow:hidden;}
+  .tracker-header{padding:14px 20px;border-bottom:1px solid var(--border);font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:space-between;}
+  .tracker-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);}
+  .tracker-tab{flex:1;padding:10px 6px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;color:var(--text3);border-bottom:2px solid transparent;transition:all .12s;}
+  .tracker-tab.active{color:var(--mp-blue);border-bottom-color:var(--mp-blue);background:var(--mp-blue-l);}
+  .tracker-body{padding:20px;}
+  .goal-ring-wrap{display:flex;align-items:center;gap:24px;margin-bottom:18px;}
+  .goal-ring{position:relative;width:96px;height:96px;flex-shrink:0;}
+  .goal-ring svg{transform:rotate(-90deg);}
+  .goal-ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .goal-ring-val{font-size:22px;font-weight:700;line-height:1;font-family:'Inter',sans-serif;}
+  .goal-ring-sub{font-size:10px;color:var(--text3);font-weight:500;margin-top:2px;}
+  .goal-info{flex:1;}
+  .goal-info-title{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .goal-info-sub{font-size:12px;color:var(--text3);line-height:1.5;}
+  .goal-progress-bar{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;margin:10px 0 6px;}
+  .goal-progress-fill{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+  .goal-chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-top:4px;}
+  .goal-chip{background:var(--bg);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;text-align:center;}
+  .goal-chip-val{font-size:18px;font-weight:700;font-family:'Inter',sans-serif;}
+  .goal-chip-lbl{font-size:10px;color:var(--text3);margin-top:2px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;}
+  /* Weekly day bars */
+  .day-bars{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px;}
+  .day-bar-wrap{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .day-bar-track{width:100%;height:70px;background:var(--bg);border-radius:6px;overflow:hidden;display:flex;align-items:flex-end;}
+  .day-bar-fill{width:100%;border-radius:6px;transition:height .4s cubic-bezier(.4,0,.2,1);}
+  .day-bar-val{font-size:12px;font-weight:700;font-family:'Inter',sans-serif;}
+  .day-bar-lbl{font-size:10px;color:var(--text3);font-weight:600;}
+  .day-bar-target{width:100%;height:1px;background:rgba(0,158,227,.3);margin-top:2px;}
+  /* Annual heatmap */
+  .annual-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;margin-top:4px;}
+  .month-block{background:var(--bg);border-radius:var(--rs);padding:10px;border:1px solid var(--border);}
+  .month-block-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+  .month-block-val{font-size:18px;font-weight:700;font-family:'Inter',sans-serif;}
+  .month-block-weeks{font-size:10px;color:var(--text3);margin-top:2px;}
+  .month-bar{height:4px;border-radius:2px;margin-top:6px;transition:width .4s;}
+  .week-rows{margin-top:8px;display:flex;flex-direction:column;gap:3px;}
+  .week-row{display:flex;align-items:center;gap:6px;}
+  .week-row-lbl{font-size:10px;color:var(--text3);width:50px;flex-shrink:0;}
+  .week-row-bar{flex:1;height:14px;background:var(--bg);border-radius:3px;overflow:hidden;}
+  .week-row-fill{height:100%;border-radius:3px;display:flex;align-items:center;padding:0 5px;transition:width .4s;}
+  .week-row-fill span{font-size:10px;font-weight:600;color:#fff;white-space:nowrap;}
+  .week-row-num{font-size:10px;color:var(--text3);width:20px;text-align:right;flex-shrink:0;}
+  @media(max-width:900px){.annual-grid{grid-template-columns:repeat(6,1fr);}.day-bars{grid-template-columns:repeat(5,1fr);}}
+
+  /* ── Mobile ── */
+  .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1.5px solid var(--border);z-index:50;height:62px;align-items:stretch;box-shadow:0 -2px 16px rgba(0,0,0,.10);}
+  .mob-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:transparent;font-family:'Inter',sans-serif;font-size:10px;font-weight:600;color:var(--text3);transition:color .12s;padding:6px 2px;-webkit-tap-highlight-color:transparent;}
+  .mob-btn.active{color:var(--mp-blue);}
+  .mob-btn svg{width:22px;height:22px;flex-shrink:0;}
+  .mob-btn span{white-space:nowrap;letter-spacing:.01em;}
+  .mob-add{width:44px;height:44px;border-radius:50%;background:var(--mp-blue);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,158,227,.4);margin-bottom:2px;}
+  .mob-add svg{width:22px;height:22px;}
+
+  @media(max-width:700px){
+    .sidebar{display:none;}
+    .mobile-nav{display:flex;}
+    .main{padding-bottom:72px;}
+    .content{padding:10px 12px;}
+    .topbar{padding:9px 12px;gap:6px;}
+    .topbar-left{min-width:0;}
+    .topbar-title{font-size:14px;}
+    .topbar-search{flex:1;max-width:none;font-size:13px;padding:7px 10px 7px 30px;}
+    .topbar-search:focus{width:auto;}
+    .topbar-actions .btn span{display:none;}
+    .topbar-actions .btn{padding:8px 10px;border-radius:50%;width:36px;height:36px;justify-content:center;}
+    .metric-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
+    .metric-card{padding:10px 12px;}
+    .metric-card .m-icon{width:26px;height:26px;margin-bottom:4px;}
+    .m-label{font-size:10px;}
+    .m-value{font-size:20px;}
+    .m-sub{font-size:10px;}
+    .grid-2{grid-template-columns:1fr;gap:10px;}
+    .card-header{padding:11px 13px;font-size:13px;}
+    .card-body{padding:11px 13px;}
+    .table-wrap table{display:block;}
+    .table-wrap table thead{display:none;}
+    .table-wrap table tbody{display:block;}
+    .table-wrap table tbody tr{display:flex;flex-wrap:wrap;padding:11px 13px;border-bottom:1px solid var(--border);gap:4px 8px;align-items:center;}
+    .table-wrap table tbody tr:last-child{border-bottom:none;}
+    .table-wrap table tbody td{display:block;padding:0;border:none;font-size:13px;}
+    .td-name{width:100%;font-size:13px;font-weight:600;margin-bottom:2px;}
+    .td-date{font-size:11px;color:var(--text3);}
+    .table-wrap table tbody td:nth-child(5){display:none;}
+    .table-wrap table tbody td:last-child{margin-left:auto;}
+    .modal-overlay{align-items:flex-end;}
+    .modal{border-radius:20px 20px 0 0;max-height:92vh;max-width:100%;width:100%;}
+    .filter-chip{padding:5px 10px;font-size:12px;}
+    .goal-ring-wrap{flex-direction:column;gap:12px;}
+    .goal-chips{grid-template-columns:repeat(2,1fr);}
+    .annual-grid{grid-template-columns:repeat(3,1fr)!important;}
+    .tracker-tab{font-size:11px;padding:8px 4px;}
+    .agenda-date-lbl{font-size:11px;}
+    .agenda-item{padding:9px 0;}
+    .sb-stats{display:none;}
+    #sync-badge{bottom:72px;}
+    /* Incentivos mobile */
+    .card-header{flex-wrap:wrap;}
+    /* Topbar compact on mobile */
+    .topbar{overflow-x:hidden;}
+  }
+</style>
+</head>
+<body>
+<!-- Loading overlay -->
+<div id="loading-overlay" style="position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:16px;">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><rect width="48" height="48" rx="12" fill="#009EE3"/><path d="M8 28L16 14L22 24L28 18L40 28" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="14" r="2.5" fill="#FFE600"/><circle cx="28" cy="18" r="2.5" fill="#FFE600"/></svg>
+  <div style="font-family:Inter,sans-serif;font-size:15px;font-weight:600;color:#333;">Conectando con Firebase...</div>
+  <div style="font-family:Inter,sans-serif;font-size:12px;color:#999;">Cargando tus prospectos</div>
+</div>
+<!-- Sync badge -->
+<div id="sync-badge" style="position:fixed;bottom:24px;left:24px;background:#00A650;color:#fff;padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;font-family:Inter,sans-serif;opacity:0;transition:opacity .4s;z-index:199;pointer-events:none;box-shadow:0 2px 8px rgba(0,166,80,.3);"></div>
+<div class="app">
+
+  <!-- ══ SIDEBAR ══ -->
+  <aside class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-brand-inner">
+        <div class="sb-brand-logo">
+          <!-- Mercado Pago "MP" mark -->
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="10" fill="#009EE3"/>
+            <path d="M8 28L16 14L22 24L28 18L40 28" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="16" cy="14" r="2.5" fill="#FFE600"/>
+            <circle cx="28" cy="18" r="2.5" fill="#FFE600"/>
+          </svg>
+        </div>
+        <div class="sb-brand-text">
+          <div class="title">Funnel FAST</div>
+          <div class="sub">Mercado Pago · CRM</div>
+        </div>
+      </div>
+      <div class="sb-brand-badge">
+        <div class="sb-brand-dot"></div>
+        Sistema activo · <span id="fb-status">conectando...</span>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="nav-section">Vistas</div>
+      <button class="nav-item active" onclick="setView('dashboard')" id="nav-dashboard">
+        <div class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </div>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="setView('prospects')" id="nav-prospects">
+        <div class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        Prospectos
+      </button>
+      <button class="nav-item" onclick="setView('agenda')" id="nav-agenda">
+        <div class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        Agenda
+      </button>
+      <button class="nav-item" onclick="setView('calc')" id="nav-calc">
+        <div class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+        </div>
+        Incentivos
+      </button>
+      <button class="nav-item" onclick="setView('tasas')" id="nav-tasas">
+        <div class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        </div>
+        Tasas Naturales
+      </button>
+      <button class="nav-item" onclick="setView('calc2')" id="nav-calc2">
+        <div class="nav-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/></svg>
+        </div>
+        Calculadora
+      </button>
+
+
+    </nav>
+    <div class="sb-stats" id="sidebar-stats"></div>
+  </aside>
+
+  <!-- ══ MAIN ══ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+      </div>
+      <input class="topbar-search" type="text" placeholder="Buscar prospecto..." id="global-search" oninput="handleSearch(this.value)">
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="openModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuevo prospecto
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ══ DASHBOARD VIEW ══ -->
+      <div id="view-dashboard" style="display:none">
+        <div class="metric-grid" id="metric-grid"></div>
+
+
+/div>
+
+        <!-- Goal tracker -->
+        <div class="tracker-card">
+          <div class="tracker-header">
+            🎯 Contador de capturas
+            <span style="font-size:12px;font-weight:400;color:var(--text3);">Meta: 40 prospectos/semana · 8 diarios</span>
+          </div>
+          <div class="tracker-tabs">
+            <button class="tracker-tab active" onclick="setTrackerTab('week')" id="ttab-week">Esta semana</button>
+            <button class="tracker-tab" onclick="setTrackerTab('month')" id="ttab-month">Este mes</button>
+            <button class="tracker-tab" onclick="setTrackerTab('year')" id="ttab-year">Historial anual</button>
+          </div>
+          <div class="tracker-body" id="tracker-body"></div>
+        </div>
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">Funnel de ventas</div>
+            <div class="card-body" id="funnel-bars"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">Próximas atenciones</div>
+            <div class="card-body" id="dash-agenda" style="max-height:300px;overflow-y:auto;"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">Últimos registros</div>
+          <div class="card-body" id="recent-list"></div>
+        </div>
+      </div>
+
+      <!-- ══ PROSPECTS VIEW ══ -->
+      <div id="view-prospects" style="display:none">
+        <div class="filter-bar" id="filter-bar"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Prospecto</th>
+              <th class="sortable" onclick="toggleSort('status')" id="th-status">Status <i class="sort-icon" id="si-status">↕</i></th>
+              <th class="sortable" onclick="toggleSort('last')" id="th-last">Última atención <i class="sort-icon" id="si-last">↕</i></th>
+              <th class="sortable" onclick="toggleSort('next')" id="th-next">Próxima atención <i class="sort-icon" id="si-next">↕</i></th>
+              <th>Notas</th><th></th>
+            </tr></thead>
+            <tbody id="prospects-tbody"></tbody>
+          </table>
+          <div class="empty" id="prospects-empty" style="display:none;">Sin prospectos con estos filtros.</div>
+        </div>
+      </div>
+
+      <!-- ══ AGENDA VIEW ══ -->
+      <div id="view-agenda" style="display:none">
+        <div id="agenda-content"></div>
+      </div>
+
+      <!-- ══ INCENTIVOS VIEW ══ -->
+      <div id="view-calc" style="display:none">
+
+        <!-- Hero -->
+        <div style="background:linear-gradient(135deg,#4A0E2E 0%,#7B1C4A 40%,#B5860D 100%);border-radius:var(--r);padding:20px 24px;margin-bottom:18px;position:relative;overflow:hidden;">
+          <div style="position:absolute;right:-20px;top:-20px;width:160px;height:160px;border-radius:50%;background:rgba(255,230,0,.05);"></div>
+          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Mercado Pago · Q2 2026 · Executive RU1 Tipo A</div>
+          <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:3px;">Calculadora de Incentivos</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.55);">Bono variable 100% = $12,428.57 · Sueldo base $29,000</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.8);font-weight:600;">Adq M0 20% · Meta 4pts · mín $5k</div>
+            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.8);font-weight:600;">Calidad M1 50% · Meta 2pts (>$60k)</div>
+            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.8);font-weight:600;">TPV M1 30% · Meta $234k</div>
+            <div style="background:rgba(255,230,0,.12);border:1px solid rgba(255,230,0,.2);border-radius:20px;padding:4px 12px;font-size:11px;color:#FFE600;font-weight:600;">Mín 80% para cobrar</div>
+          </div>
+          <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div style="font-size:11px;color:rgba(255,255,255,.5);">Mes a evaluar:</div>
+            <input type="month" id="c-mes" oninput="renderTpvList();calcIncentivos()"
+              style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600;color:#fff;font-family:'Inter',sans-serif;outline:none;">
+          </div>
+        </div>
+
+        <!-- 1. RESULTADOS DEL MES -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-resultado','si-resultado')">🏆 1. Resultado del mes<span id="si-resultado" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span></div>
+          <div id="sec-resultado" class="card-body" style="display:none">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;" id="result-metrics"></div>
+            <div style="border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:14px;" id="result-table"></div>
+            <div id="result-final"></div>
+          </div></div>
+        </div>
+
+        <!-- 2. TPV POR CLIENTE -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-tpv','si-tpv')">📊 2. TPV por cliente<span id="si-tpv" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span> — ingreso diario</div>
+          <div id="sec-tpv" style="display:none"><div style="padding:8px 16px;background:var(--bg);font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);">
+            Calidad: $0-59k=0 · $60-99k=1 · $100-299k=1.5 · $300-499k=2 · $500-699k=2.5 · >$700k=3 &nbsp;|&nbsp; Adq: Normal×1 · PJ×1.5 · +Renta+0.5 · PJ+Renta×2 · Mín $5k
+          </div>
+          <div id="tpv-list"></div>
+          <div id="tpv-summary" style="padding:10px 16px;background:var(--bg);border-top:1px solid var(--border);font-size:13px;font-weight:600;"></div>
+        </div>
+
+        <!-- 3. FAST FUNNEL -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-fast','si-fast')">⚡ 3. FAST Funnel<span id="si-fast" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span> — seguimiento semanal
+            </div>
+          <div id="sec-fast" class="card-body" style="display:none">
+            <div id="fast-weekly-bars" style="margin-bottom:16px;"></div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;">
+              <div>
+                <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Semanas cumplidas Neg (≥12)</div>
+                <input class="form-input" type="number" id="f-sem-neg" value="0" min="0" max="4" oninput="calcIncentivos()" style="font-size:15px;font-weight:600;">
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;">Booster +1% por semana (tope +4%)</div>
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Semanas cumplidas Closing (≥3)</div>
+                <input class="form-input" type="number" id="f-sem-close" value="0" min="0" max="4" oninput="calcIncentivos()" style="font-size:15px;font-weight:600;">
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;">Booster +1% por semana (tope +4%)</div>
+              </div>
+            </div>
+            <div id="fast-status" style="margin-top:12px;"></div>
+          </div>
+        </div>
+
+        <!-- 4. EXTRAS -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-extras','si-extras')">➕ 4. Extras del mes<span id="si-extras" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span></div>
+          <div id="sec-extras" class="card-body" style="display:none">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;">
+              <div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;">Software opt-ins (#)</div>
+                <input class="form-input" type="number" id="e-software-n" value="0" min="0" oninput="calcIncentivos()">
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;">+2.5% c/u, tope +10%</div>
+              </div>
+              <div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;">Devices &lt;$5k en M1 (#)</div>
+                <input class="form-input" type="number" id="e-devices-n" value="0" min="0" oninput="calcIncentivos()">
+                <div style="font-size:11px;color:var(--text3);margin-top:3px;">-1% por device</div>
+              </div>
+              <div><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px;">Otros (%)</div>
+                <input class="form-input" type="number" id="e-otros" value="0" step="0.1" oninput="calcIncentivos()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. HISTORIAL DE PORTAFOLIO -->
+        <div class="card" style="margin-bottom:16px;">
+          <div class="card-header" style="cursor:pointer;" onclick="togglePortfolio()">
+            📁 5. Historial de portafolio
+            <span id="portfolio-toggle-icon" style="font-size:13px;color:var(--text3);">▶</span>
+          </div>
+          <div id="portfolio-history-wrap" style="display:none">
+            <div style="padding:8px 16px;background:#FFFBEB;font-size:11px;color:#92400E;border-bottom:1px solid var(--border);">
+              M0 = mes adquisición · M1 = siguiente mes (KPIs activos) · M2+ = fuera del portafolio
+            </div>
+            <div id="portfolio-history"></div>
+          </div>
+        </div>
+
+      </div>
+
+
+
+  <!-- ══ TASAS NATURALES VIEW ══ -->
+  <div id="view-tasas" style="display:none">
+
+    <!-- 1. Encabezado -->
+    <div style="background:linear-gradient(135deg,#FFE600 0%,#F5DC00 60%,#E6B800 100%);border-radius:var(--r);padding:20px 24px;margin-bottom:18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;right:-20px;top:-20px;width:150px;height:150px;border-radius:50%;background:rgba(0,0,0,.05);"></div>
+      <div style="font-size:10px;font-weight:700;color:rgba(0,0,0,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Mercado Pago · Point · MCC · v3.5</div>
+      <div style="font-size:20px;font-weight:800;color:#1A1A1A;margin-bottom:4px;">Tasas Naturales</div>
+      <div style="font-size:13px;color:rgba(0,0,0,.6);">Comisiones especiales por giro de negocio · Solo Débito y Crédito VISA / Mastercard</div>
+      <div style="margin-top:10px;padding:8px 14px;background:rgba(0,0,0,.08);border-radius:8px;font-size:12px;color:rgba(0,0,0,.7);display:inline-block;">
+    ⚠ Las tasas naturales <strong>NO aplican</strong> para AMEX, Valeras, TC/TD Internacional (Non-Nat precio fijo)
+      </div>
+    </div>
+
+    <!-- 2. ¿Qué son? -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header" style="cursor:pointer;" onclick="toggleSection('ts-que','ts-si-que')">
+    💡 ¿Qué son las tasas naturales?
+    <span id="ts-si-que" style="font-size:13px;color:var(--text3);margin-left:auto;">▼</span>
+      </div>
+      <div id="ts-que" class="card-body">
+    <p style="font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:12px;">Es la <strong>comisión que paga un comercio</strong> por procesar pagos con tarjeta. Varía según el giro del negocio y el volumen mensual (TPV). Aunque parece un porcentaje pequeño, a lo largo del tiempo impacta significativamente las finanzas.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div style="padding:12px 14px;background:#ECFDF5;border:1px solid #A7F3D0;border-radius:var(--rs);">
+        <div style="font-size:12px;font-weight:700;color:#065F46;margin-bottom:4px;">✅ Nat — Tarjetas Naturales</div>
+        <div style="font-size:12px;color:#047857;">Débito y Crédito VISA / Mastercard<br>→ Aplican tasas por escalón de TPV</div>
+      </div>
+      <div style="padding:12px 14px;background:#FEF2F2;border:1px solid #FECACA;border-radius:var(--rs);">
+        <div style="font-size:12px;font-weight:700;color:#991B1B;margin-bottom:4px;">❌ Non-Nat — No Naturales</div>
+        <div style="font-size:12px;color:#B91C1C;">AMEX, Valeras, TC/TD Internacional<br>→ Precio fijo siempre</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--rs);font-size:13px;color:#92400E;">
+      <strong>Requisito clave:</strong> La actividad económica preponderante del SAT debe tener <strong>mínimo 2 años activa</strong> para ser validada con tasa natural.
+    </div>
+      </div>
+    </div>
+
+    <!-- 3. Validador -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header" style="cursor:pointer;" onclick="toggleSection('ts-validador','ts-si-val')">
+    ✅ Validador de actividad económica
+    <span id="ts-si-val" style="font-size:13px;color:var(--text3);margin-left:auto;">▼</span>
+      </div>
+      <div id="ts-validador" class="card-body">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">
+      Ingresa la <strong>actividad económica preponderante</strong> del SAT y su fecha de inicio para verificar si califica para tasa natural.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end;margin-bottom:14px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Actividad económica</div>
+        <input id="val-actividad" class="form-input" type="text" placeholder="Ej: Comercio al por menor en ferreterías" oninput="validarTasaNatural()">
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Fecha inicio SAT</div>
+        <input id="val-fecha" class="form-input" type="date" onchange="validarTasaNatural()">
+      </div>
+      <button class="btn btn-primary" onclick="validarTasaNatural()">Validar</button>
+    </div>
+    <div id="val-result"></div>
+      </div>
+    </div>
+
+    <!-- 4. Catálogo -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header" style="cursor:pointer;" onclick="toggleSection('ts-catalogo','ts-si-cat')">
+    📋 Catálogo completo de actividades económicas
+    <span id="ts-si-cat" style="font-size:13px;color:var(--text3);margin-left:auto;">▼</span>
+      </div>
+      <div id="ts-catalogo">
+    <div style="padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--border);">
+      <input id="cat-search" class="form-input" type="text" placeholder="Buscar actividad económica..." oninput="filtrarCatalogo(this.value)" style="max-width:400px;">
+    </div>
+    <div id="catalogo-list"></div>
+      </div>
+    </div>
+
+    <!-- 5. Grupos -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header" style="cursor:pointer;" onclick="toggleSection('ts-grupos','ts-si-grupos')">
+    🏢 Grupos que aplican para tasa natural
+    <span id="ts-si-grupos" style="font-size:13px;color:var(--text3);margin-left:auto;">▼</span>
+      </div>
+      <div id="ts-grupos" class="card-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div style="border:2px solid #009EE3;border-radius:var(--rs);padding:16px;">
+        <div style="font-size:14px;font-weight:700;color:#009EE3;margin-bottom:10px;">Grupo A</div>
+        <div style="font-size:13px;color:var(--text2);line-height:2;">
+      → Beneficencia<br>
+      → Educación Básica<br>
+      → Guarderías<br>
+      → Médicos / Dentistas<br>
+      → Miscelánea / Abarrotes<br>
+      → Ferreterías y Refaccionarias<br>
+      → Salones de belleza
+        </div>
+      </div>
+      <div style="border:2px solid #FF6E00;border-radius:var(--rs);padding:16px;">
+        <div style="font-size:14px;font-weight:700;color:#FF6E00;margin-bottom:10px;">Grupo B</div>
+        <div style="font-size:13px;color:var(--text2);line-height:2;">
+      → Gasolineras<br>
+      → Colegios / Universidades<br>
+      → Comida Rápida
+        </div>
+        <div style="margin-top:10px;padding:8px;background:#FFF0E6;border-radius:6px;font-size:11px;color:#FF6E00;">Más escalones → tasas más bajas a mayor volumen</div>
+      </div>
+    </div>
+      </div>
+    </div>
+
+    <!-- 6. Tabla de tasas -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header" style="cursor:pointer;" onclick="toggleSection('ts-tabla','ts-si-tabla')">
+    📊 Tasas por grupo y escalón de TPV
+    <span id="ts-si-tabla" style="font-size:13px;color:var(--text3);margin-left:auto;">▼</span>
+      </div>
+      <div id="ts-tabla">
+    <div style="padding:10px 18px 8px;background:#EFF6FF;border-bottom:1px solid var(--border);">
+      <span style="font-size:11px;font-weight:700;color:#009EE3;text-transform:uppercase;letter-spacing:.06em;">Grupo A · Beneficencia · Educación · Guarderías · Médicos · Miscelánea · Refaccionarias · Salones</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:var(--bg);">
+      <th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">ESC</th>
+      <th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Rango TPV mensual</th>
+      <th style="padding:8px 14px;text-align:center;font-size:11px;font-weight:700;color:#009EE3;text-transform:uppercase;border-bottom:1px solid var(--border);">TC / TD Nat</th>
+      <th style="padding:8px 14px;text-align:center;font-size:11px;font-weight:700;color:#E53935;text-transform:uppercase;border-bottom:1px solid var(--border);">Non-Nat</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">1</td>
+      <td style="padding:10px 14px;">&lt; $30,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">3.50%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">3.50%</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">2</td>
+      <td style="padding:10px 14px;">$30,000 – $100,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">2.25%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">3</td>
+      <td style="padding:10px 14px;">&gt; $100,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">2.04%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 18px 8px;background:#FFF0E6;border-top:2px solid var(--border);border-bottom:1px solid var(--border);">
+      <span style="font-size:11px;font-weight:700;color:#FF6E00;text-transform:uppercase;letter-spacing:.06em;">Grupo B · Gasolineras · Colegios/Universidades · Comida Rápida</span>
+    </div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr style="background:var(--bg);">
+      <th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">ESC</th>
+      <th style="padding:8px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Rango TPV mensual</th>
+      <th style="padding:8px 14px;text-align:center;font-size:11px;font-weight:700;color:#FF6E00;text-transform:uppercase;border-bottom:1px solid var(--border);">TC / TD Nat</th>
+      <th style="padding:8px 14px;text-align:center;font-size:11px;font-weight:700;color:#E53935;text-transform:uppercase;border-bottom:1px solid var(--border);">Non-Nat</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">1</td>
+      <td style="padding:10px 14px;">&lt; $30,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#FF6E00;">3.50%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">3.50%</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">2</td>
+      <td style="padding:10px 14px;">$30,000 – $100,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#FF6E00;">3.00%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">3.00%</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">3</td>
+      <td style="padding:10px 14px;">$100,000 – $299,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#FF6E00;">2.79%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">4</td>
+      <td style="padding:10px 14px;">$300,000 – $499,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#FF6E00;">2.59%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 14px;font-weight:600;">5</td>
+      <td style="padding:10px 14px;">&gt; $500,000</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#FF6E00;">2.29%</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="padding:10px 18px;font-size:11px;color:var(--text3);background:var(--bg);border-top:1px solid var(--border);">
+      * Non-Nat incluye: AMEX, Valeras, TC Internacional y TD Internacional.
+    </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══ CALCULADORA VIEW ══ -->
+  <div id="view-calc2" style="display:none">
+
+    <!-- Hero -->
+    <div style="background:linear-gradient(135deg,#003087 0%,#009EE3 100%);border-radius:var(--r);padding:20px 24px;margin-bottom:18px;position:relative;overflow:hidden;">
+      <div style="position:absolute;right:-20px;top:-20px;width:160px;height:160px;border-radius:50%;background:rgba(255,230,0,.08);"></div>
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Mercado Pago vs Competencia</div>
+      <div style="font-size:20px;font-weight:800;color:#FFE600;margin-bottom:3px;">Calculadora de Comisiones</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.7);">Compara comisiones por transacción y meses sin intereses</div>
+    </div>
+
+    <!-- Inputs -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header">💰 Ingresa el monto de la venta</div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:end;">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Monto de venta ($)</div>
+            <input id="c2-monto" class="form-input" type="number" placeholder="Ej. 5000" value="5000"
+              oninput="calcComisiones()" style="font-size:18px;font-weight:700;">
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Tipo de tarjeta</div>
+            <select id="c2-tipo" class="form-select" onchange="calcComisiones()">
+              <option value="nat">TD/TC Nacional (Nat)</option>
+              <option value="nonnat">Non-Nat (AMEX, Intl)</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">TPV mensual del comercio (para pricing diferenciado)</div>
+          <select id="c2-tpv" class="form-select" onchange="calcComisiones()">
+            <option value="0">Menos de $30,000</option>
+            <option value="30">$30,000 – $100,000</option>
+            <option value="100">$100,000 – $300,000</option>
+            <option value="300">$300,000 – $500,000</option>
+            <option value="500">Más de $500,000</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparativa TD/TC -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header">💳 Comparativa — Comisión por transacción (TD/TC)</div>
+      <div class="card-body" style="padding:0;">
+        <div id="c2-result-tdtc"></div>
+      </div>
+    </div>
+
+    <!-- Comparativa MSI -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header">📅 Comparativa — Meses Sin Intereses (Sobretasa PSJ)
+        <select id="c2-msi" class="form-select" onchange="calcComisiones()" style="font-size:12px;padding:4px 8px;width:auto;margin-left:auto;">
+          <option value="3">3 meses</option>
+          <option value="6">6 meses</option>
+          <option value="9">9 meses</option>
+          <option value="12">12 meses</option>
+          <option value="18">18 meses</option>
+          <option value="24">24 meses</option>
+        </select>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <div id="c2-result-msi"></div>
+      </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header">🏆 ¿Cuánto ahorra el comercio con Mercado Pago?</div>
+      <div class="card-body">
+        <div id="c2-ahorro"></div>
+      </div>
+    </div>
+
+  </div>
+
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STATUSES=['Calificación','Aceptada','Negociación','Adquirida','Rechazada'];
+const NEXT_DAYS={'Calificación':6,'Aceptada':3,'Negociación':6,'Adquirida':null,'Rechazada':null};
+const STATUS_COLORS={'Calificación':'#3AADA8','Aceptada':'#C97B8A','Negociación':'#D4226E','Adquirida':'#C9A84C','Rechazada':'#E88C00'};
+const STATUS_CLASS={'Calificación':'s-cal','Aceptada':'s-ace','Negociación':'s-neg','Adquirida':'s-adq','Rechazada':'s-rec'};
+const METRIC_ICONS={
+  'Total prospectos':['#EFF6FF','#009EE3','M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75'],
+  'Activos':['#E6F7EF','#00A650','M22 12h-4l-3 9L9 3l-3 9H2'],
+  'Adquiridos':['#E6F7EF','#6CC24A','M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
+  'Conversión':['#FFF9E6','#FF6E00','M13 2L3 14h9l-1 8 10-12h-9l1-8z'],
+  'Rechazados':['#FDECEA','#E53935','M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z'],
+};
+const SEED=[{"id": 1, "name": "Neuro Diagnostic", "status": "Calificación", "last": "2026-06-09T16:00", "next": "2026-06-13", "notes": ""}, {"id": 2, "name": "Restaurante Chely", "status": "Calificación", "last": "2026-06-09T16:00", "next": "2026-06-13", "notes": ""}, {"id": 3, "name": "Cuyusos Rines y Llantas", "status": "Calificación", "last": "2026-06-09T14:00", "next": "2026-06-13", "notes": ""}, {"id": 4, "name": "Prehistoric Evolution", "status": "Calificación", "last": "2026-06-09T14:00", "next": "2026-06-13", "notes": ""}, {"id": 5, "name": "Dra. Julieta Martinez", "status": "Calificación", "last": "2026-06-09T13:00", "next": "2026-06-13", "notes": ""}, {"id": 6, "name": "Dra. Noyola", "status": "Calificación", "last": "2026-06-09T12:00", "next": "2026-06-13", "notes": ""}, {"id": 7, "name": "La Bendita Chilaquiza", "status": "Calificación", "last": "2026-06-09T12:00", "next": "2026-06-13", "notes": ""}, {"id": 8, "name": "Taco Ben", "status": "Calificación", "last": "2026-06-09T12:00", "next": "2026-06-13", "notes": ""}, {"id": 9, "name": "GineTab", "status": "Calificación", "last": "2026-06-08T15:00", "next": "2026-06-12", "notes": ""}, {"id": 10, "name": "Centro Medico Arellano", "status": "Calificación", "last": "2026-06-08T15:00", "next": "2026-06-12", "notes": ""}, {"id": 11, "name": "Dr. Daniel Rodriguez", "status": "Calificación", "last": "2026-06-08T15:00", "next": "2026-06-12", "notes": ""}, {"id": 12, "name": "Schuster Tortas", "status": "Calificación", "last": "2026-06-08T15:00", "next": "2026-06-12", "notes": ""}, {"id": 13, "name": "Boutique Silvia Guedez", "status": "Calificación", "last": "2026-06-08T15:00", "next": "2026-06-12", "notes": ""}, {"id": 14, "name": "Idea Roma Cosmetics", "status": "Calificación", "last": "2026-06-08T14:00", "next": "2026-06-12", "notes": ""}, {"id": 15, "name": "Dra. Valeria Espinosa", "status": "Calificación", "last": "2026-06-08T14:00", "next": "2026-06-12", "notes": ""}, {"id": 16, "name": "Avyna Villahermosa Distribuidor", "status": "Adquirida", "last": "2026-06-08T11:00", "next": "", "notes": "", "custId": "3458463517", "acqDate": "2026-06-08"}, {"id": 17, "name": "Bodega Cafe", "status": "Calificación", "last": "2026-06-05T16:00", "next": "2026-06-09", "notes": ""}, {"id": 18, "name": "Soy tu Torta", "status": "Calificación", "last": "2026-06-05T15:00", "next": "2026-06-09", "notes": ""}, {"id": 19, "name": "La Choquita Gourmet", "status": "Calificación", "last": "2026-06-05T15:00", "next": "2026-06-09", "notes": ""}, {"id": 20, "name": "Zaatar Mx", "status": "Calificación", "last": "2026-06-05T15:00", "next": "2026-06-09", "notes": ""}, {"id": 21, "name": "Juan Riveroll Chocolateria", "status": "Calificación", "last": "2026-06-05T13:00", "next": "2026-06-09", "notes": ""}, {"id": 22, "name": "Mr. Bongle", "status": "Calificación", "last": "2026-06-05T12:00", "next": "2026-06-09", "notes": ""}, {"id": 23, "name": "Al Bat Bicentenario", "status": "Calificación", "last": "2026-06-05T12:00", "next": "2026-06-09", "notes": ""}, {"id": 24, "name": "Laut Communal Coffee", "status": "Calificación", "last": "2026-06-05T12:00", "next": "2026-06-09", "notes": ""}, {"id": 25, "name": "Ladron de Recetas", "status": "Calificación", "last": "2026-06-05T11:00", "next": "2026-06-09", "notes": ""}, {"id": 26, "name": "Dr. Paulo Perez Otorrinolaringologia", "status": "Calificación", "last": "2026-06-05T11:00", "next": "2026-06-09", "notes": ""}, {"id": 27, "name": "Graham Nieto", "status": "Calificación", "last": "2026-06-04T17:00", "next": "2026-06-08", "notes": ""}, {"id": 28, "name": "Denium Dental Care", "status": "Calificación", "last": "2026-06-04T16:00", "next": "2026-06-08", "notes": ""}, {"id": 29, "name": "Medic Fem", "status": "Calificación", "last": "2026-06-04T16:00", "next": "2026-06-08", "notes": ""}, {"id": 30, "name": "Marcos Elias Ginecologo", "status": "Calificación", "last": "2026-06-04T16:00", "next": "2026-06-08", "notes": ""}, {"id": 31, "name": "Sugey Servin Make Up", "status": "Calificación", "last": "2026-06-04T16:00", "next": "2026-06-08", "notes": ""}, {"id": 32, "name": "Dr. Israel Cifuentes Ginecologo", "status": "Calificación", "last": "2026-06-04T16:00", "next": "2026-06-08", "notes": ""}, {"id": 33, "name": "Fisioterapia Clinica", "status": "Calificación", "last": "2026-06-04T16:00", "next": "2026-06-08", "notes": ""}, {"id": 34, "name": "Centro Endoscopico Tabasco", "status": "Calificación", "last": "2026-06-04T15:00", "next": "2026-06-08", "notes": ""}, {"id": 35, "name": "Vita Salud Dent", "status": "Calificación", "last": "2026-06-04T15:00", "next": "2026-06-08", "notes": ""}, {"id": 36, "name": "Fiera Rooftop", "status": "Calificación", "last": "2026-06-04T14:00", "next": "2026-06-08", "notes": ""}, {"id": 37, "name": "Bravo Butchers", "status": "Calificación", "last": "2026-06-04T14:00", "next": "2026-06-08", "notes": ""}, {"id": 38, "name": "Doris Boutique", "status": "Calificación", "last": "2026-06-04T13:00", "next": "2026-06-08", "notes": ""}, {"id": 39, "name": "Volopolis", "status": "Calificación", "last": "2026-06-04T13:00", "next": "2026-06-08", "notes": ""}, {"id": 40, "name": "Betkery", "status": "Calificación", "last": "2026-06-04T13:00", "next": "2026-06-08", "notes": ""}, {"id": 41, "name": "Be Fit Tab", "status": "Calificación", "last": "2026-06-04T12:00", "next": "2026-06-08", "notes": ""}, {"id": 42, "name": "Dr. Gonzalo Ruiz", "status": "Calificación", "last": "2026-06-04T12:00", "next": "2026-06-08", "notes": ""}, {"id": 43, "name": "Raul Escayola Ginecologo", "status": "Calificación", "last": "2026-06-04T12:00", "next": "2026-06-08", "notes": ""}, {"id": 44, "name": "Casanova Estilistas", "status": "Calificación", "last": "2026-06-03T13:00", "next": "2026-06-07", "notes": ""}, {"id": 45, "name": "Garage Nueve Tres", "status": "Calificación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 46, "name": "Laura Flores Hair Stylist", "status": "Calificación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 47, "name": "Brows Artist Academy", "status": "Calificación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 48, "name": "Carla Mz", "status": "Negociación", "last": "2026-06-09T15:00", "next": "2026-06-13", "notes": ""}, {"id": 49, "name": "Tapioca Lounge", "status": "Negociación", "last": "2026-06-09T20:00", "next": "2026-06-13", "notes": ""}, {"id": 50, "name": "La 91 Restaurante", "status": "Negociación", "last": "2026-06-09T20:00", "next": "2026-06-13", "notes": ""}, {"id": 51, "name": "Rojos Burger", "status": "Aceptada", "last": "2026-06-03T18:00", "next": "2026-06-06", "notes": ""}, {"id": 52, "name": "Di Bari Pizzeria", "status": "Rechazada", "last": "2026-06-04T17:00", "next": "", "notes": ""}, {"id": 53, "name": "Dra. Elibel Perez", "status": "Negociación", "last": "2026-06-04T17:00", "next": "2026-06-08", "notes": ""}, {"id": 54, "name": "Si Va", "status": "Negociación", "last": "2026-06-04T17:00", "next": "2026-06-08", "notes": ""}, {"id": 55, "name": "Dr. Romeo Castillo", "status": "Negociación", "last": "2026-06-04T17:00", "next": "2026-06-08", "notes": ""}, {"id": 56, "name": "Si la Vida es Bella", "status": "Negociación", "last": "2026-06-04T17:00", "next": "2026-06-08", "notes": ""}, {"id": 57, "name": "Veterinaria Armando", "status": "Adquirida", "last": "2026-05-29T11:00", "next": "", "notes": "", "custId": "2198754502", "acqDate": "2026-05-29"}, {"id": 58, "name": "Hudson Burgers", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 59, "name": "Maison Carolina", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 60, "name": "Fuego Extremo", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 61, "name": "Santa Calixta", "status": "Adquirida", "last": "2026-06-01T09:00", "next": "", "notes": "", "custId": "3440951695", "acqDate": "2026-06-01"}, {"id": 62, "name": "Dra. Jarquin Colposcopias", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 63, "name": "La Lorca Nails", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 64, "name": "Los Originales Tacos Vhsa", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 65, "name": "Dra. Caro Villanueva", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 66, "name": "Encorazonarte", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 67, "name": "Barberia del Toxico", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 68, "name": "Detalle Eterno", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 69, "name": "Brauni por Laura Gorra", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 70, "name": "Shusheros Villahermosa", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 71, "name": "Academia Danzarte", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 72, "name": "Dr. Gerardo Izundegui", "status": "Negociación", "last": "2026-06-03T12:00", "next": "2026-06-07", "notes": ""}, {"id": 73, "name": "Boneless Cam", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 74, "name": "Lucia Reposteria", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 75, "name": "Sahuma", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 76, "name": "Gold Balam", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 77, "name": "Productos de limpieza Cali", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 78, "name": "Peke's", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 79, "name": "Todo de fresa", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 80, "name": "Electrofrio", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 81, "name": "Antojitos La Guera", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 82, "name": "Tina Cantina", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 83, "name": "Taqueria Marin", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 84, "name": "Mr. Miche Snack", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 85, "name": "Carnitas el Camioncito", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 86, "name": "Cafeteria Alvarez", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 87, "name": "Deliroll", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 88, "name": "El Jardin de Jana", "status": "Negociación", "last": "2026-06-03T11:00", "next": "2026-06-07", "notes": ""}, {"id": 89, "name": "Vazmar Floristeria", "status": "Adquirida", "last": "2026-06-01T14:00", "next": "", "notes": "", "custId": "2302309382", "acqDate": "2026-06-01"}, {"id": 90, "name": "Benitos Burguer", "status": "Rechazada", "last": "2026-06-03T09:00", "next": "", "notes": ""}, {"id": 91, "name": "Sweet Chaires", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 92, "name": "Espacio Creativo Bakery", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 93, "name": "Coco Brownies", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 94, "name": "Biofumiga", "status": "Rechazada", "last": "2026-05-25T15:00", "next": "", "notes": ""}, {"id": 95, "name": "Galart", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 96, "name": "Tenore Vhsa", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 97, "name": "KVelda", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 98, "name": "Enfoque Laboratorio Creativo", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 99, "name": "La niña fresa", "status": "Rechazada", "last": "2026-05-25T15:00", "next": "", "notes": ""}, {"id": 100, "name": "Amira Galindo", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 101, "name": "Casa Meraki", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 102, "name": "Yoss Gomez Hair", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 103, "name": "LoZa fotografía", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 104, "name": "Burpapas", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 105, "name": "Paola Magaña Beauty Salon", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 106, "name": "Bernely Garcia Studio", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 107, "name": "Más que un Antojo", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 108, "name": "Floristeria Lomara", "status": "Rechazada", "last": "2026-05-24T15:00", "next": "", "notes": ""}, {"id": 109, "name": "Technology", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 110, "name": "Carnitas San Miguel", "status": "Adquirida", "last": "2026-05-22T18:00", "next": "", "notes": "", "custId": "3419969677", "acqDate": "2026-05-22"}, {"id": 111, "name": "Little tear tatto", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 112, "name": "Pollos Varsan", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 113, "name": "Finca Santa Luisa", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 114, "name": "Peke's Eventos", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 115, "name": "Vazmar Floristeria", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": "", "custId": "2302309382", "acqDate": "2026-06-01"}, {"id": 116, "name": "Canela y Amor", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 117, "name": "Dr. Molina Cantu", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 118, "name": "Salad Center", "status": "Rechazada", "last": "2026-06-03T11:00", "next": "", "notes": ""}, {"id": 119, "name": "Pawquesito", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 120, "name": "Paddie Pet Shop", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 121, "name": "Sheló", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 122, "name": "D'Amici Pizza y Pasta", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 123, "name": "La Cubileteria", "status": "Rechazada", "last": "2026-06-03T10:00", "next": "", "notes": ""}, {"id": 124, "name": "Zack & Yo", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 125, "name": "Floreria Chamers", "status": "Rechazada", "last": "2026-06-03T10:00", "next": "", "notes": ""}, {"id": 126, "name": "Toro Bravo", "status": "Rechazada", "last": "2026-06-03T10:00", "next": "", "notes": ""}, {"id": 127, "name": "Universidad Dunamis", "status": "Rechazada", "last": "2026-06-03T10:00", "next": "", "notes": ""}, {"id": 128, "name": "Shelo Nabel Choca", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 129, "name": "Creadiva", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 130, "name": "Pastelería Narella", "status": "Adquirida", "last": "2026-05-15T17:00", "next": "", "notes": "", "custId": "44627018", "acqDate": "2026-05-15"}, {"id": 131, "name": "RP soluciones gráficas", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 132, "name": "Corte fino Barber shop", "status": "Rechazada", "last": "2026-06-03T10:00", "next": "", "notes": ""}, {"id": 133, "name": "Envioshop", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 134, "name": "Ta k-liente", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 135, "name": "Perruniversidad", "status": "Rechazada", "last": "2026-05-24T14:00", "next": "", "notes": ""}, {"id": 136, "name": "Antojitos lupita", "status": "Rechazada", "last": "2026-05-24T13:00", "next": "", "notes": ""}, {"id": 137, "name": "Magenta imprenta", "status": "Rechazada", "last": "2026-05-24T13:00", "next": "", "notes": ""}, {"id": 138, "name": "Intermedia conectando", "status": "Rechazada", "last": "2026-05-24T13:00", "next": "", "notes": ""}, {"id": 139, "name": "Servicio técnico de Tabasco", "status": "Rechazada", "last": "2026-05-24T13:00", "next": "", "notes": ""}, {"id": 140, "name": "Firulais Spa", "status": "Rechazada", "last": "2026-05-24T13:00", "next": "", "notes": ""}, {"id": 141, "name": "Aleja spa", "status": "Rechazada", "last": "2026-05-24T13:00", "next": "", "notes": ""}, {"id": 142, "name": "Xperia Hair", "status": "Rechazada", "last": "2026-05-24T13:00", "next": "", "notes": ""}, {"id": 143, "name": "Chicharrones el Pancho", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 144, "name": "Pollos El Morrocoyon", "status": "Rechazada", "last": "2026-05-21T10:00", "next": "", "notes": ""}, {"id": 145, "name": "Fuego y Masa Pizzeria", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 146, "name": "Mathi Tanita", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 147, "name": "Luvin Studio", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 148, "name": "La Tabasqueña", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 149, "name": "Hobby Fauna", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 150, "name": "Panaderia y Pasteleria Veronica", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 151, "name": "NO ROBOT", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 152, "name": "Chocolateria de Origen by Wolter", "status": "Rechazada", "last": "2026-05-19T11:00", "next": "", "notes": ""}, {"id": 153, "name": "Lavande", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 154, "name": "Good Brothers", "status": "Adquirida", "last": "2026-05-13T14:00", "next": "", "notes": "", "custId": "486413616", "acqDate": "2026-05-13"}, {"id": 155, "name": "Las Tortas de 16", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 156, "name": "Radio Titan", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 157, "name": "Panini Club", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 158, "name": "El Reyna", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 159, "name": "Sensei Sushi Bar", "status": "Rechazada", "last": "2026-05-21T10:00", "next": "", "notes": ""}, {"id": 160, "name": "Abarrotes Yadih", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 161, "name": "JH Brangus", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 162, "name": "Pet Care clínica veterinaria", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 163, "name": "Country Car Wash", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 164, "name": "Aurelia Restaurante", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 165, "name": "Tonsores", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 166, "name": "Tacoz A Pata", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 167, "name": "Las Galletas de Gabi", "status": "Rechazada", "last": "2026-05-19T10:00", "next": "", "notes": ""}, {"id": 168, "name": "Tiendita Lupita", "status": "Rechazada", "last": "2026-05-18T13:00", "next": "", "notes": ""}, {"id": 169, "name": "Paulina Berchiman Make Up & Hairstyle", "status": "Rechazada", "last": "2026-05-18T13:00", "next": "", "notes": ""}, {"id": 170, "name": "Meralinda MX", "status": "Rechazada", "last": "2026-05-18T13:00", "next": "", "notes": ""}];
+
+// ── Business days ──
+function addBusinessDays(dateStr, days) {
+  if (!days || !dateStr) return '';
+  let d = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T00:00');
+  if (isNaN(d)) return '';
+  let added = 0;
+  while (added < days) {
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  // If result is weekend, push to Monday
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+function calcNextDate(last, status) {
+  const days = NEXT_DAYS[status];
+  if (!days || !last) return '';
+  return addBusinessDays(last, days);
+}
+
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d.includes('T') ? d : d + 'T00:00'); if (isNaN(dt)) return d;
+  const M = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const t = d.includes('T') ? ` ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}` : '';
+  return `${dt.getDate()} ${M[dt.getMonth()]}${t}`;
+}
+function fmtDateFull(d) {
+  const dt = new Date(d + 'T00:00');
+  const D = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const M = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return `${D[dt.getDay()]} ${dt.getDate()} de ${M[dt.getMonth()]}`;
+}
+function badge(s) { return `<span class="badge ${STATUS_CLASS[s]||''}">${s}</span>`; }
+
+// ── Firebase config ──
+const FB_CONFIG = {
+  apiKey: "AIzaSyAw95iFndLSKjKKzo9LuN00BMNDvwgfqRE",
+  authDomain: "funnel-fast.firebaseapp.com",
+  projectId: "funnel-fast",
+  storageBucket: "funnel-fast.firebasestorage.app",
+  messagingSenderId: "790031842515",
+  appId: "1:790031842515:web:a95e72de2efe0da4f66826"
+};
+
+// Firebase loaded via CDN in <head> — we use compat SDK
+let db = null;
+let fbReady = false;
+
+function initFirebase() {
+  try {
+    firebase.initializeApp(FB_CONFIG);
+    db = firebase.firestore();
+    fbReady = true;
+  } catch(e) {
+    console.warn('Firebase init failed, using localStorage fallback', e);
+  }
+}
+
+// ── Data layer: Firebase primary, localStorage fallback ──
+const LS_KEY = 'funnel_v11';
+
+function loadDataLocal() {
+  try { const s = localStorage.getItem(LS_KEY); if (s) return JSON.parse(s); } catch(e) {}
+  return SEED.map((p,i) => ({...p, id: i+1}));
+}
+function saveDataLocal(d) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(d)); } catch(e) {}
+}
+
+// Save all prospects to Firestore (batch write)
+async function saveData(d) {
+  saveDataLocal(d); // always keep local copy as cache
+  if (!fbReady) return;
+  try {
+    const batch = db.batch();
+    // Write the full array as a single document for simplicity
+    const ref = db.collection('funnels').doc('main');
+    batch.set(ref, { prospects: d, updatedAt: new Date().toISOString() });
+    await batch.commit();
+  } catch(e) {
+    console.warn('Firebase save failed:', e);
+  }
+}
+
+// Load from Firestore, fallback to localStorage
+async function loadDataRemote() {
+  if (!fbReady) return loadDataLocal();
+  try {
+    const doc = await db.collection('funnels').doc('main').get();
+    if (doc.exists && doc.data().prospects?.length) {
+      const d = doc.data().prospects;
+      saveDataLocal(d); // update local cache
+      return d;
+    }
+  } catch(e) {
+    console.warn('Firebase load failed, using local cache:', e);
+  }
+  return loadDataLocal();
+}
+
+// Real-time listener — updates UI when another device saves
+function subscribeToChanges() {
+  if (!fbReady) return;
+  db.collection('funnels').doc('main').onSnapshot(doc => {
+    if (!doc.exists) return;
+    const remote = doc.data().prospects;
+    if (!remote?.length) return;
+    // Avoid overwriting if we just saved (within 2s)
+    const now = Date.now();
+    if (window._lastSaveAt && now - window._lastSaveAt < 2000) return;
+    prospects = remote;
+    nextId = Math.max(...prospects.map(p=>p.id), 0) + 1;
+    saveDataLocal(prospects);
+    render();
+    showSyncBadge();
+  }, err => console.warn('Snapshot error:', err));
+}
+
+function showSyncBadge() {
+  const b = document.getElementById('sync-badge');
+  if (!b) return;
+  b.textContent = '↻ Sincronizado';
+  b.style.opacity = '1';
+  setTimeout(() => { b.style.opacity = '0'; }, 2500);
+}
+
+// Wrap saveData to track last save time
+const _origSaveData = saveData;
+async function saveDataTracked(d) {
+  window._lastSaveAt = Date.now();
+  await _origSaveData(d);
+}
+
+
+let prospects = loadDataLocal(); // start with local cache immediately
+let nextId = prospects.length > 0 ? Math.max(...prospects.map(p=>p.id)) + 1 : 1;
+let currentView = 'dashboard', currentFilter = 'Todos', searchQuery = '', editingId = null;
+let sortField = null, sortDir = 1;
+let pendingAiResults = [];
+
+// ── Smart local parser ──
+const MONTHS_ES = {
+  enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,
+  julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12,
+  ene:1,feb:2,mar:3,abr:4,may:5,jun:6,jul:7,ago:8,sep:9,oct:10,nov:11,dic:12
+};
+const STATUS_KW = {
+  'Calificación':['calificaci','calific','nuevo','nueva','agreg','visit','primer','contact','prospecté','prospecto nuevo'],
+  'Aceptada':    ['acept','interesa','dijo que sí','dijo si','le gustó','le gusto','quiere proceder','quiere'],
+  'Negociación': ['negoci','propuesta','cotiz','siguiendo','seguimiento','llamé','llame','hablé','hable','reuni','reunión','revisando'],
+  'Adquirida':   ['adquiri','cerr','compró','compro','firmó','firmo','pag','ya es cliente','cliente nuevo'],
+  'Rechazada':   ['rechaz','no le interesa','no quiere','no acepto','no aceptó','perdid','cancel','no contest','no respondió'],
+};
+
+function normalizeStr(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,'').trim();
+}
+
+function detectStatus(text) {
+  const t = normalizeStr(text);
+  // Match explicit status names (normalized, so tildes don't matter)
+  const statusMap = [
+    ['Calificación', 'calificacion'],
+    ['Aceptada',     'aceptada'],
+    ['Negociación',  'negociacion'],
+    ['Adquirida',    'adquirida'],
+    ['Rechazada',    'rechazada'],
+  ];
+  for (const [status, key] of statusMap) {
+    if (t.includes(key)) return status;
+  }
+  // Keyword fallback
+  for (const [status, kws] of Object.entries(STATUS_KW)) {
+    if (kws.some(k => t.includes(normalizeStr(k)))) return status;
+  }
+  return 'Calificación';
+}
+
+function extractHour(text) {
+  const m = text.match(/(\d{1,2})\s*(?:hs?|am|pm|hrs?|h\b)/i);
+  if (m) { let h=parseInt(m[1]); if(/pm/i.test(text)&&h<12)h+=12; return `${String(h).padStart(2,'0')}:00`; }
+  return '12:00';
+}
+
+function parseDateTime(text) {
+  const t = text.toLowerCase();
+  const now = new Date(); const todayStr = isoDate(now);
+  if (t.includes('anteayer')) { const d=new Date(now);d.setDate(d.getDate()-2);return `${isoDate(d)}T${extractHour(t)}`; }
+  if (t.includes('ayer'))     { const d=new Date(now);d.setDate(d.getDate()-1);return `${isoDate(d)}T${extractHour(t)}`; }
+  const m = t.match(/(\d{1,2})\s+de\s+(\w+)(?:[,\s]+(\d{1,2})\s*hs?)?/);
+  if (m) {
+    const mon = MONTHS_ES[m[2]];
+    if (mon) return `${now.getFullYear()}-${String(mon).padStart(2,'0')}-${m[1].padStart(2,'0')}T${(m[3]||'12').padStart(2,'0')}:00`;
+  }
+  return `${todayStr}T${extractHour(t)}`;
+}
+
+function extractName(line) {
+  // Remove date, time, status and action words to isolate the name
+  let s = line
+    .replace(/última atención/gi,'').replace(/\d{1,2}\s+de\s+\w+/gi,'')
+    .replace(/\d{1,2}\s*hs?/gi,'').replace(/(?:hoy|ayer|anteayer)/gi,'')
+    .replace(/(?:calificaci[oó]n|aceptada|negociaci[oó]n|adquirida|rechazada)/gi,'')
+    .replace(/(?:llamé|visité|hablé|cerré|agregué|actualiza\s+a|pasó\s+a|reuni[oó]n?\s+con)/gi,'')
+    .replace(/[,;:]/g,' ').replace(/\s{2,}/g,' ').trim();
+  const stopWords = new Set(['en','de','la','el','los','las','con','por','para','que','del','una','un','y','a','no','ya','al','se']);
+  const parts = s.split(/\s+/).filter(w=>w.length>1&&!stopWords.has(w.toLowerCase()));
+  if (!parts.length) return null;
+  return parts.slice(0,5).join(' ');
+}
+
+function parseProspectsLocal(text) {
+  // Split into individual prospect entries
+  const lines = text.split(/\n|(?<!\d)[•·]\s*|(?<!\d)\d+\.\s+/)
+    .map(l=>l.trim()).filter(l=>l.length>2);
+
+  return lines.map(line => {
+    const status = detectStatus(line);
+    const last   = parseDateTime(line);
+    const name   = extractName(line);
+    if (!name) return null;
+    const existing = prospects.find(p => normalizeStr(p.name) === normalizeStr(name));
+    return { name, status, last, action: existing ? 'update' : 'new', notes: '' };
+  }).filter(Boolean);
+}
+
+async function runCapture() {
+  const text = document.getElementById('capture-input').value.trim();
+  if (!text) { showToast('Escribe al menos un prospecto'); return; }
+  document.getElementById('capture-btn').disabled = true;
+  document.getElementById('ai-results').style.display = 'none';
+  document.getElementById('ai-thinking').style.display = 'flex';
+  document.getElementById('ai-thinking-text').textContent = 'Clasificando prospectos...';
+  await new Promise(r => setTimeout(r, 350));
+  try {
+    const parsed = parseProspectsLocal(text);
+    document.getElementById('ai-thinking').style.display = 'none';
+    document.getElementById('capture-btn').disabled = false;
+    if (!parsed.length) { showToast('No se detectaron prospectos — revisa el texto'); return; }
+    showAiResults(parsed);
+  } catch(err) {
+    document.getElementById('ai-thinking').style.display = 'none';
+    document.getElementById('capture-btn').disabled = false;
+    showToast('Error al procesar — intenta de nuevo');
+    console.error(err);
+  }
+}
+
+function showAiResults(items) {
+  pendingAiResults = items.map(p => ({...p, next: calcNextDate(p.last, p.status)}));
+  const nw = items.filter(p=>p.action==='new').length, up = items.filter(p=>p.action==='update').length;
+  document.getElementById('ai-results-title').textContent = `${items.length} prospecto${items.length>1?'s':''} detectado${items.length>1?'s':''}`;
+  document.getElementById('ai-results-sub').textContent = `${nw} nuevo${nw!==1?'s':''} · ${up} a actualizar`;
+  document.getElementById('ai-confirm-btn').textContent = `Guardar ${items.length}`;
+  document.getElementById('ai-results-list').innerHTML = pendingAiResults.map((p,i) => `
+    <div class="ai-result-item">
+      <div>${badge(p.status)}</div>
+      <div class="ai-result-info">
+        <div class="ai-result-name">${p.name} <span class="ai-tag ${p.action==='new'?'tag-new':'tag-update'}">${p.action==='new'?'+ Nuevo':'↻ Actualizar'}</span></div>
+        <div class="ai-result-meta">Última: ${fmtDate(p.last)} · Próxima: ${p.next ? fmtDate(p.next) : 'sin fecha'}${p.notes?' · '+p.notes:''}</div>
+      </div>
+      <button class="icon-btn" onclick="removePending(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>`).join('');
+  document.getElementById('ai-results').style.display = '';
+}
+function removePending(i) { pendingAiResults.splice(i,1); if(!pendingAiResults.length){cancelAiResults();return;} showAiResults(pendingAiResults); }
+function cancelAiResults() { pendingAiResults=[]; document.getElementById('ai-results').style.display='none'; }
+function confirmAiResults() {
+  let added=0, updated=0;
+  pendingAiResults.forEach(p => {
+    const ex = prospects.find(x => normalizeStr(x.name) === normalizeStr(p.name));
+    if (ex) {
+      ex.status = p.status;
+      ex.last   = p.last;
+      ex.next   = p.next;
+      if (p.notes) ex.notes = p.notes;
+      ex.capturedAt = p.last ? p.last.slice(0,10) + 'T00:00:00Z' : new Date().toISOString();
+      ex._updated = true;
+      updated++;
+    } else {
+      const capturedAt = p.last ? p.last.slice(0,10) + 'T00:00:00Z' : new Date().toISOString();
+      prospects.push({id:nextId++, name:p.name, status:p.status, last:p.last, next:p.next, notes:p.notes||'', capturedAt, _new:true});
+      added++;
+    }
+  });
+  saveDataTracked(prospects);
+  document.getElementById('capture-input').value='';
+  cancelAiResults();
+  setTimeout(()=>{ prospects.forEach(p=>{ delete p._new; delete p._updated; }); saveDataTracked(prospects); }, 90000);
+  render();
+  showToast(`✓ ${added} agregado${added!==1?'s':''}, ${updated} actualizado${updated!==1?'s':''}`);
+}
+
+// ── Goal Tracker ──
+const WEEKLY_GOAL = 40, DAILY_GOAL = 8;
+let trackerTab = 'week';
+
+function setTrackerTab(t) {
+  trackerTab = t;
+  ['week','month','year'].forEach(x => {
+    document.getElementById('ttab-'+x).classList.toggle('active', x===t);
+  });
+  renderTracker();
+}
+
+// Get Monday of the week containing date d
+function getWeekStart(d) {
+  const dt = new Date(d);
+  const day = dt.getDay(); // 0=sun
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + diff);
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+function isoDate(d) { return d.toISOString().split('T')[0]; }
+
+// Count ONLY Calificación prospects registered in a date range [start, end)
+function countCaptured(start, end) {
+  return prospects.filter(p => {
+    if (p.status !== 'Calificación') return false;
+    const d = (p.capturedAt || p.last || '').split('T')[0];
+    return d && d >= start && d < end;
+  }).length;
+}
+function countCapturedByDay(start) {
+  // start = Monday ISO, returns array [mon,tue,wed,thu,fri]
+  const days = [];
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(start + 'T00:00');
+    d.setDate(d.getDate() + i);
+    const ds = isoDate(d);
+    const next = new Date(d); next.setDate(next.getDate()+1);
+    days.push(countCaptured(ds, isoDate(next)));
+  }
+  return days;
+}
+
+// Get all weeks of a month as [{label, start, end, count}]
+function getWeeksOfMonth(year, month) {
+  const weeks = [];
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month+1, 0);
+  // Find first Monday on or before firstDay
+  let cur = getWeekStart(firstDay);
+  let wNum = 1;
+  while (cur <= lastDay) {
+    const wEnd = new Date(cur); wEnd.setDate(wEnd.getDate()+5); // Fri
+    const wEndFull = new Date(cur); wEndFull.setDate(wEndFull.getDate()+7);
+    const cnt = countCaptured(isoDate(cur), isoDate(wEndFull));
+    weeks.push({label:`Sem ${wNum}`, start:isoDate(cur), end:isoDate(wEndFull), count:cnt});
+    cur = new Date(cur); cur.setDate(cur.getDate()+7);
+    wNum++;
+  }
+  return weeks;
+}
+
+function goalColor(val, goal) {
+  if (val >= goal) return '#E91E8C';
+  if (val >= goal * 0.7) return '#F48FB1';
+  return '#FCE4EC';
+}
+
+function renderTracker() {
+  const el = document.getElementById('tracker-body');
+  if (!el) return;
+  const now = new Date();
+  const todayStr = isoDate(now);
+
+  if (trackerTab === 'week') {
+    const weekStart = getWeekStart(now);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+7);
+    const weekTotal = countCaptured(isoDate(weekStart), isoDate(weekEnd));
+    const pct = Math.min(100, Math.round((weekTotal/WEEKLY_GOAL)*100));
+    const dayNames = ['Lun','Mar','Mié','Jue','Vie'];
+    const dayCounts = countCapturedByDay(isoDate(weekStart));
+    const maxDay = Math.max(...dayCounts, DAILY_GOAL);
+    const col = goalColor(weekTotal, WEEKLY_GOAL);
+    // Ring
+    const r=38, circ=2*Math.PI*r;
+    const dash = (pct/100)*circ;
+    el.innerHTML = `
+      <div class="goal-ring-wrap">
+        <div class="goal-ring">
+          <svg width="96" height="96" viewBox="0 0 96 96">
+            <circle cx="48" cy="48" r="${r}" fill="none" stroke="var(--bg)" stroke-width="8"/>
+            <circle cx="48" cy="48" r="${r}" fill="none" stroke="${col}" stroke-width="8"
+              stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+          </svg>
+          <div class="goal-ring-label">
+            <div class="goal-ring-val" style="color:${col}">${weekTotal}</div>
+            <div class="goal-ring-sub">de ${WEEKLY_GOAL}</div>
+          </div>
+        </div>
+        <div class="goal-info">
+          <div class="goal-info-title">${weekTotal >= WEEKLY_GOAL ? '🎉 ¡Meta alcanzada!' : `Faltan ${WEEKLY_GOAL - weekTotal} para la meta`}</div>
+          <div class="goal-info-sub">Semana del ${isoDate(weekStart)} · ${pct}% completado</div>
+          <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${pct}%;background:${col}"></div></div>
+          <div style="font-size:11px;color:var(--text3);">Meta diaria: <strong style="color:var(--text)">${DAILY_GOAL} prospectos</strong> · Acumulado: <strong style="color:#E91E8C">${weekTotal} / ${WEEKLY_GOAL}</strong></div>
+        </div>
+      </div>
+      <div class="day-bars">
+        ${dayNames.map((name,i) => {
+          const d = new Date(weekStart); d.setDate(d.getDate()+i);
+          const ds = isoDate(d);
+          const cnt = dayCounts[i];
+          const h = Math.round((cnt/maxDay)*66);
+          const isToday = ds === todayStr;
+          const isPast = ds < todayStr;
+          const barCol = cnt > DAILY_GOAL ? '#880E4F' : cnt === DAILY_GOAL ? '#E91E8C' : cnt > 0 ? '#F8BBD0' : '#eee';
+          return `<div class="day-bar-wrap">
+            <div class="day-bar-val" style="color:${cnt>0?barCol:'var(--text3)'}">${cnt}</div>
+            <div class="day-bar-track">
+              <div class="day-bar-fill" style="height:${Math.max(h,cnt>0?4:0)}px;background:${barCol}"></div>
+            </div>
+            <div class="day-bar-lbl" style="color:${isToday?'#AD1457':'var(--text3)'}">${name}${isToday?' •':''}</div>
+            <div style="font-size:9px;color:${cnt>DAILY_GOAL?'#AD1457':cnt===DAILY_GOAL?'#E91E8C':'var(--text3)'}">
+              ${cnt>DAILY_GOAL?`+${cnt-DAILY_GOAL} extra`:cnt===DAILY_GOAL?'✓ Meta':cnt>0&&isPast?`-${DAILY_GOAL-cnt}`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+  } else if (trackerTab === 'month') {
+    const year = now.getFullYear(), month = now.getMonth();
+    const monthStart = isoDate(new Date(year, month, 1));
+    const monthEnd = isoDate(new Date(year, month+1, 1));
+    const monthTotal = countCaptured(monthStart, monthEnd);
+    const weeks = getWeeksOfMonth(year, month);
+    const monthGoal = weeks.length * WEEKLY_GOAL;
+    const pct = Math.min(100, Math.round((monthTotal/monthGoal)*100));
+    const col = goalColor(monthTotal, monthGoal);
+    const MN = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+    const maxW = Math.max(...weeks.map(w=>w.count), WEEKLY_GOAL);
+    el.innerHTML = `
+      <div class="goal-ring-wrap">
+        <div class="goal-ring">
+          <svg width="96" height="96" viewBox="0 0 96 96">
+            <circle cx="48" cy="48" r="38" fill="none" stroke="var(--bg)" stroke-width="8"/>
+            <circle cx="48" cy="48" r="38" fill="none" stroke="${col}" stroke-width="8"
+              stroke-dasharray="${(pct/100)*2*Math.PI*38} ${2*Math.PI*38}" stroke-linecap="round"/>
+          </svg>
+          <div class="goal-ring-label">
+            <div class="goal-ring-val" style="color:${col}">${monthTotal}</div>
+            <div class="goal-ring-sub">de ${monthGoal}</div>
+          </div>
+        </div>
+        <div class="goal-info">
+          <div class="goal-info-title">${MN[month].charAt(0).toUpperCase()+MN[month].slice(1)} ${year} — ${weeks.length} semanas</div>
+          <div class="goal-info-sub">Meta mensual: ${monthGoal} prospectos (${weeks.length} × ${WEEKLY_GOAL})</div>
+          <div class="goal-progress-bar"><div class="goal-progress-fill" style="width:${pct}%;background:${col}"></div></div>
+          <div style="font-size:11px;color:var(--text3);">${pct}% completado · ${monthGoal - monthTotal > 0 ? `Faltan ${monthGoal - monthTotal}` : '🎉 Meta alcanzada'}</div>
+        </div>
+      </div>
+      <div class="week-rows">
+        ${weeks.map(w => {
+          const wp = Math.min(100, Math.round((w.count/WEEKLY_GOAL)*100));
+          const wc = goalColor(w.count, WEEKLY_GOAL);
+          const ww = Math.round((w.count/maxW)*100);
+          return `<div class="week-row">
+            <div class="week-row-lbl">${w.label}</div>
+            <div class="week-row-bar"><div class="week-row-fill" style="width:${ww}%;background:${wc}"><span>${w.count}</span></div></div>
+            <div class="week-row-num" style="color:${wc}">${wp}%</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+  } else { // year
+    const year = now.getFullYear();
+    const START_MONTH = (year === 2026) ? 5 : 0; // June = index 5 for 2026, Jan for other years
+    const MN = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const visibleMonths = Array.from({length: 12 - START_MONTH}, (_,i) => START_MONTH + i);
+    el.innerHTML = `
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:14px;">Historial ${year} — desde junio · prospectos capturados por mes</div>
+      <div class="annual-grid" style="grid-template-columns:repeat(auto-fill,minmax(90px,1fr))">
+        ${visibleMonths.map(m => {
+          const mStart = isoDate(new Date(year,m,1));
+          const mEnd = isoDate(new Date(year,m+1,1));
+          const total = countCaptured(mStart, mEnd);
+          const weeks = getWeeksOfMonth(year, m);
+          const mGoal = weeks.length * WEEKLY_GOAL;
+          const pct = mGoal > 0 ? Math.min(100, Math.round((total/mGoal)*100)) : 0;
+          const col = total === 0 ? 'var(--text3)' : goalColor(total, mGoal);
+          const isFuture = m > now.getMonth();
+          return `<div class="month-block" style="${isFuture?'opacity:.45':''}">
+            <div class="month-block-title">${MN[m]}</div>
+            <div class="month-block-val" style="color:${col}">${total}</div>
+            <div class="month-block-weeks">${weeks.length} sem · meta ${mGoal}</div>
+            <div class="month-bar" style="background:var(--bg);"><div class="month-bar" style="width:${pct}%;background:${col};height:4px;border-radius:2px;"></div></div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="margin-top:20px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px;">Detalle por semanas — ${year}</div>
+        ${visibleMonths.map(m => {
+          const weeks = getWeeksOfMonth(year, m);
+          const isFuture = m > now.getMonth();
+          const maxW = Math.max(...weeks.map(w=>w.count), WEEKLY_GOAL, 1);
+          return `<div style="margin-bottom:12px;${isFuture?'opacity:.45':''}">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;">${MN[m]}</div>
+            ${weeks.map(w=>{
+              const ww=Math.round((w.count/maxW)*100);
+              const wc=goalColor(w.count,WEEKLY_GOAL);
+              return `<div class="week-row">
+                <div class="week-row-lbl">${w.label}</div>
+                <div class="week-row-bar"><div class="week-row-fill" style="width:${ww}%;background:${wc}"><span>${w.count}</span></div></div>
+                <div class="week-row-num" style="color:${wc}">${w.count}/${WEEKLY_GOAL}</div>
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+}
+
+// Make renderDashboard call renderTracker
+
+function toggleSort(field) {
+  if (sortField===field) sortDir*=-1; else {sortField=field;sortDir=1;}
+  ['status','last','next'].forEach(f => {
+    document.getElementById('th-'+f).classList.toggle('sorted', f===sortField);
+    document.getElementById('si-'+f).textContent = f===sortField ? (sortDir===1?'↑':'↓') : '↕';
+  });
+  renderProspects();
+}
+
+function updateNextPreview() {
+  const last=document.getElementById('f-last').value, status=document.getElementById('f-status').value;
+  const next=calcNextDate(last,status), preview=document.getElementById('next-preview');
+  if (next&&NEXT_DAYS[status]) {
+    preview.style.display=''; preview.textContent=`→ Próxima atención: ${fmtDate(next)} (${NEXT_DAYS[status]} días hábiles)`;
+    document.getElementById('f-next').value=next;
+  } else { preview.style.display='none'; document.getElementById('f-next').value=''; }
+}
+
+function onStatusChange() {
+  const now=new Date(), pad=n=>String(n).padStart(2,'0');
+  const nowDt=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  // Only auto-update date if editing an existing prospect (status change)
+  if (editingId) {
+    document.getElementById('f-last').value = nowDt;
+  }
+  updateNextPreview();
+}
+
+function calcStats() {
+  const counts={}; STATUSES.forEach(s=>counts[s]=0);
+  prospects.forEach(p=>{if(counts[p.status]!==undefined)counts[p.status]++;});
+  const total=prospects.length,adq=counts['Adquirida'],rec=counts['Rechazada'];
+  return{counts,total,adquiridas:adq,rechazadas:rec,activos:total-rec,conv:total>0?Math.round((adq/total)*100):0};
+}
+
+function setView(v) {
+  currentView=v;
+  document.querySelectorAll('.nav-item,.nav-status').forEach(el=>el.classList.remove('active'));
+  const n=document.getElementById('nav-'+v); if(n)n.classList.add('active');
+  ['dashboard','prospects','agenda','calc','tasas','calc2'].forEach(name=>{
+    const mb=document.getElementById('mob-'+name);
+    if(mb) mb.classList.toggle('active', name===v);
+  });
+  const titles={dashboard:'Dashboard',prospects:'Prospectos',agenda:'Agenda',calc:'Incentivos',tasas:'Tasas Naturales',calc2:'Calculadora'};
+  document.getElementById('topbar-title').textContent=titles[v]||v;
+  // Hide every view, show only target
+  ['dashboard','prospects','agenda','calc','tasas'].forEach(name=>{
+    const el=document.getElementById('view-'+name);
+    if(el) el.style.cssText = name===v ? 'display:block' : 'display:none !important';
+  });
+  if(v==='calc') renderCalc();
+  else if(v==='tasas') renderTasas();
+  else if(v==='calc2') renderCalc2();
+  render();
+  // Re-enforce after any async renders
+  setTimeout(()=>{
+    ['dashboard','prospects','agenda','calc','tasas'].forEach(name=>{
+      const el=document.getElementById('view-'+name);
+      if(el) el.style.cssText = name===v ? 'display:block' : 'display:none !important';
+    });
+  }, 50);
+  setTimeout(()=>{
+    ['dashboard','prospects','agenda','calc','tasas'].forEach(name=>{
+      const el=document.getElementById('view-'+name);
+      if(el) el.style.cssText = name===v ? 'display:block' : 'display:none !important';
+    });
+  }, 500);
+}
+function openMobFilter(){ document.getElementById('mob-filter-overlay').style.display=''; }
+function closeMobFilter(){ document.getElementById('mob-filter-overlay').style.display='none'; }
+function filterByStatus(s){currentFilter=s;setView('prospects');}
+function handleSearch(q){searchQuery=q.toLowerCase();if(currentView!=='prospects')setView('prospects');else render();}
+
+function render() {
+  // Always enforce correct view visibility
+  ['dashboard','prospects','agenda','calc','tasas','calc2'].forEach(name=>{
+    const el=document.getElementById('view-'+name);
+    if(el) el.style.cssText = name===currentView ? 'display:block' : 'display:none !important';
+  });
+  renderSidebar();
+  if(currentView==='capture')renderCapture();
+  else if(currentView==='dashboard')renderDashboard();
+  else if(currentView==='prospects')renderProspects();
+  else if(currentView==='agenda')renderAgenda();
+  else if(currentView==='calc'){renderTpvList();calcIncentivos();}
+}
+
+function renderSidebar() {
+  const{counts,total,adquiridas,conv}=calcStats();
+  document.getElementById('sidebar-stats').innerHTML=`
+    <div class="sstat"><div class="sstat-val">${total}</div><div class="sstat-lbl">Total</div></div>
+    <div class="sstat"><div class="sstat-val">${adquiridas}</div><div class="sstat-lbl">Adquiridos</div></div>
+    <div class="sstat"><div class="sstat-val">${counts['Negociación']}</div><div class="sstat-lbl">Negociación</div></div>
+    <div class="sstat"><div class="sstat-val">${conv}%</div><div class="sstat-lbl">Conversión</div></div>`;
+}
+
+function renderCapture() {
+  // Find the most recent 'last' date across all prospects
+  const sorted = [...prospects]
+    .filter(p => p.last)
+    .sort((a,b) => b.last.localeCompare(a.last));
+  if (!sorted.length) {
+    document.getElementById('capture-recent').innerHTML = '<div style="color:var(--text3);font-size:13px;">Sin registros aún</div>';
+    return;
+  }
+  // Get the date part of the most recent entry
+  const latestDate = sorted[0].last.split('T')[0];
+  // Show all prospects whose 'last' date matches that date
+  const group = sorted.filter(p => p.last && p.last.split('T')[0] === latestDate);
+  const MN = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const dt = new Date(latestDate + 'T00:00');
+  const dateLabel = `${dt.getDate()} de ${MN[dt.getMonth()]} de ${dt.getFullYear()}`;
+  document.getElementById('capture-recent').innerHTML =
+    `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
+      ${dateLabel} · ${group.length} prospecto${group.length!==1?'s':''}
+    </div>` +
+    group.map(p=>`<div class="agenda-item" onclick="openModal(${p.id})">
+      <span class="agenda-name">${p._new?'<span class="dot-new"></span>':''}${p.name}</span>
+      ${badge(p.status)}
+      <span style="font-size:12px;color:var(--text3);flex-shrink:0">${fmtDate(p.last)}</span>
+    </div>`).join('');
+}
+
+function renderDashboard() {
+  const{counts,total,adquiridas,rechazadas,activos,conv}=calcStats();
+
+  // Update terminal widget
+  const now = new Date();
+  const MN2 = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const D2  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  const termDate = document.getElementById('terminal-date');
+  if(termDate) termDate.textContent = `${D2[now.getDay()]} ${now.getDate()} ${MN2[now.getMonth()]} ${now.getFullYear()}`;
+  const todayStr = now.toISOString().split('T')[0];
+  const todayCount = prospects.filter(p => {
+    const d = (p.capturedAt||p.last||'').split('T')[0];
+    return d === todayStr && p.status === 'Calificación';
+  }).length;
+  const termToday = document.getElementById('terminal-today');
+  if(termToday) termToday.textContent = todayCount;
+  const mdata=[
+    {label:'Total prospectos',value:total,sub:'en el funnel',color:'#009EE3'},
+    {label:'Activos',value:activos,sub:'en seguimiento',color:'#00A650'},
+    {label:'Adquiridos',value:adquiridas,sub:'clientes cerrados',color:'#6CC24A'},
+    {label:'Conversión',value:conv+'%',sub:'del total',color:'#FF6E00'},
+    {label:'Rechazados',value:rechazadas,sub:'fuera del funnel',color:'#E53935'},
+  ];
+  document.getElementById('metric-grid').innerHTML=mdata.map(m=>{
+    const ic=METRIC_ICONS[m.label]||['#F5F5F5','#666',''];
+    return `<div class="metric-card">
+      <div class="m-icon" style="background:${ic[0]}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${ic[1]}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${ic[2]}"/></svg>
+      </div>
+      <div class="m-label">${m.label}</div>
+      <div class="m-value" style="color:${m.color}">${m.value}</div>
+      <div class="m-sub">${m.sub}</div>
+    </div>`}).join('');
+  const maxC=Math.max(...STATUSES.map(s=>counts[s]),1);
+  document.getElementById('funnel-bars').innerHTML=STATUSES.map(s=>{
+    const c=counts[s],pct=total>0?Math.round((c/total)*100):0,w=Math.round((c/maxC)*100);
+    return `<div class="funnel-row"><div class="funnel-lbl">${s}</div><div class="funnel-track"><div class="funnel-fill" style="width:${w}%;background:${STATUS_COLORS[s]}"><span>${c}</span></div></div><div class="funnel-pct">${pct}%</div></div>`;
+  }).join('');
+  const upcoming=prospects.filter(p=>p.next).sort((a,b)=>a.next.localeCompare(b.next)).slice(0,12);
+  document.getElementById('dash-agenda').innerHTML=upcoming.length
+    ?upcoming.map(p=>`<div class="agenda-item" onclick="openModal(${p.id})"><span class="agenda-name">${p.name}</span>${badge(p.status)}<span style="font-size:12px;color:var(--text3);flex-shrink:0">${fmtDate(p.next)}</span></div>`).join('')
+    :'<div style="color:var(--text3);font-size:13px;padding:8px 0;">Sin atenciones programadas</div>';
+  const recent=[...prospects].reverse().slice(0,8);
+  document.getElementById('recent-list').innerHTML=recent.map(p=>`<div class="agenda-item" onclick="openModal(${p.id})"><span class="agenda-name">${p.name}</span>${badge(p.status)}<span style="font-size:12px;color:var(--text3);flex-shrink:0">${fmtDate(p.last)}</span></div>`).join('');
+  renderTracker();
+}
+
+function renderProspects() {
+  document.getElementById('filter-bar').innerHTML=['Todos',...STATUSES].map(s=>`<button class="filter-chip ${currentFilter===s?'active':''}" onclick="setFilter('${s}')">${s}</button>`).join('');
+  let f=prospects;
+  if(currentFilter!=='Todos')f=f.filter(p=>p.status===currentFilter);
+  if(searchQuery)f=f.filter(p=>p.name.toLowerCase().includes(searchQuery));
+  f=[...f];
+  if(sortField){
+    f.sort((a,b)=>{
+      let va=a[sortField]||'',vb=b[sortField]||'';
+      if(sortField==='status'){va=STATUSES.indexOf(a.status);vb=STATUSES.indexOf(b.status);}
+      return va<vb?-1*sortDir:va>vb?1*sortDir:0;
+    });
+  } else f.sort((a,b)=>{const o=STATUSES.indexOf(a.status)-STATUSES.indexOf(b.status);return o!==0?o:a.name.localeCompare(b.name);});
+  const tbody=document.getElementById('prospects-tbody'),empty=document.getElementById('prospects-empty');
+  if(!f.length){tbody.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  tbody.innerHTML=f.map(p=>`<tr style="${p._new?'background:#EFF6FF':p._updated?'background:#FFF8E6':''}">
+    <td class="td-name">${p._new?'<span class="dot-new"></span>':''}${p.name}</td>
+    <td>${badge(p.status)}</td>
+    <td class="td-date">${fmtDate(p.last)}</td>
+    <td class="td-date">${p.next?fmtDate(p.next):'—'}</td>
+    <td class="td-date" style="max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.notes||'—'}</td>
+    <td><button class="icon-btn" onclick="openModal(${p.id})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></td>
+  </tr>`).join('');
+}
+
+function renderAgenda() {
+  const withNext=prospects.filter(p=>p.next).sort((a,b)=>a.next.localeCompare(b.next));
+  const grouped={};
+  withNext.forEach(p=>{const k=p.next.split('T')[0];if(!grouped[k])grouped[k]=[];grouped[k].push(p);});
+  const el=document.getElementById('agenda-content');
+  if(!withNext.length){el.innerHTML='<div class="empty">Sin atenciones programadas.</div>';return;}
+  el.innerHTML=Object.entries(grouped).map(([date,ps])=>`
+    <div style="margin-bottom:20px;">
+      <div class="agenda-date-lbl">${fmtDateFull(date)}</div>
+      <div class="card"><div class="card-body" style="padding:0 20px;">
+        ${ps.map(p=>`<div class="agenda-item" onclick="openModal(${p.id})"><span class="agenda-name">${p.name}</span>${badge(p.status)}</div>`).join('')}
+      </div></div>
+    </div>`).join('');
+}
+function setFilter(s){currentFilter=s;render();}
+
+function openModal(id) {
+  editingId=id||null;
+  document.getElementById('modal-title').textContent=id?'Editar prospecto':'Nuevo prospecto';
+  document.getElementById('modal-delete-btn').style.display=id?'':'none';
+  const now=new Date(),pad=n=>String(n).padStart(2,'0');
+  const defDt=`${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  if(id){
+    const p=prospects.find(x=>x.id===id);if(!p)return;
+    document.getElementById('f-name').value=p.name;
+    document.getElementById('f-status').value=p.status;
+    document.getElementById('f-last').value=p.last||defDt;
+    document.getElementById('f-next').value=p.next||'';
+    document.getElementById('f-notes').value=p.notes||'';
+    document.getElementById('f-custid').value=p.custId||'';
+    document.getElementById('f-acqdate').value=p.acqDate||'';
+  }else{
+    document.getElementById('f-name').value='';
+    document.getElementById('f-status').value='Calificación';
+    document.getElementById('f-last').value=defDt;
+    document.getElementById('f-notes').value='';
+    document.getElementById('f-custid').value='';
+    document.getElementById('f-acqdate').value='';
+  }
+  updateNextPreview();
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),150);
+}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');editingId=null;}
+function closeModalOnOverlay(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+function saveProspect(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('El nombre es requerido');return;}
+  const last=document.getElementById('f-last').value,status=document.getElementById('f-status').value;
+  // capturedAt always mirrors the 'last' date so the counter stays accurate
+  const capturedAt = new Date().toISOString(); // always real registration time
+  const p={name,status,last,next:document.getElementById('f-next').value||calcNextDate(last,status),notes:document.getElementById('f-notes').value.trim(),capturedAt,custId:document.getElementById('f-custid').value.trim(),acqDate:document.getElementById('f-acqdate').value};
+  if(editingId){const idx=prospects.findIndex(x=>x.id===editingId);if(idx>-1)prospects[idx]={...prospects[idx],...p};showToast('Actualizado ✓');}
+  else{p.id=nextId++;prospects.push(p);showToast('Prospecto agregado ✓');}
+  saveDataTracked(prospects);closeModal();render();
+}
+function deleteProspect(){
+  if(!editingId)return;if(!confirm('¿Eliminar este prospecto?'))return;
+  prospects=prospects.filter(p=>p.id!==editingId);saveDataTracked(prospects);closeModal();showToast('Eliminado');render();
+}
+
+let toastT;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2800);}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();document.getElementById('global-search').focus();}
+  if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){
+    if(document.getElementById('modal-overlay').classList.contains('open'))saveProspect();
+    else if(currentView==='capture')runCapture();
+  }
+});
+
+// ── Recalculate ALL next dates to respect business days ──
+function pushToMonday(dateStr) {
+  if (!dateStr) return dateStr;
+  const d = new Date(dateStr.includes('T') ? dateStr : dateStr + 'T00:00');
+  if (isNaN(d)) return dateStr;
+  while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
+  return d.toISOString().split('T')[0];
+}
+function fixAllNextDates() {
+  let changed = 0;
+  prospects.forEach(p => {
+    if (!p.next) return;
+    const fixed = pushToMonday(p.next);
+    if (fixed !== p.next) { p.next = fixed; changed++; }
+  });
+  if (changed > 0) { saveDataTracked(prospects); }
+}
+
+// ── Incentivos Calculator ──
+// Ramp-up targets (Executive, starts May 2026)
+const RAMP_START = '2026-05'; // M0
+const RAMP_TARGETS = [
+  {rampM:0, sellers:2, calidad:0, tpvMeta:110000,  label:'M0'},
+  {rampM:1, sellers:4, calidad:2, tpvMeta:234000,  label:'M1'},
+  {rampM:2, sellers:5, calidad:4, tpvMeta:468000,  label:'M2'},
+  {rampM:3, sellers:6, calidad:5, tpvMeta:585000,  label:'M3'},
+  {rampM:4, sellers:6, calidad:6, tpvMeta:819000,  label:'M4+'},
+];
+const BONO_VARIABLE = 12428.57;
+const TPV_MIN_ADQ   = 5000;
+const CAL_MIN_TPV   = 60000;
+const MN_FULL  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const MN_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+// ── Ramp helpers ──
+function getRampMonth(evalMonth) {
+  // evalMonth = "2026-06", RAMP_START = "2026-05"
+  const [ey,em] = evalMonth.split('-').map(Number);
+  const [sy,sm] = RAMP_START.split('-').map(Number);
+  return (ey-sy)*12 + (em-sm);
+}
+function getTargetsForMonth(evalMonth) {
+  const rm = getRampMonth(evalMonth);
+  const idx = Math.min(rm, RAMP_TARGETS.length-1);
+  return RAMP_TARGETS[Math.max(0,idx)];
+}
+function getMetaAdq(evalMonth)  { return getTargetsForMonth(evalMonth).sellers; }
+function getMetaCal(evalMonth)  { return getTargetsForMonth(evalMonth).calidad; }
+function getMetaTpv(evalMonth)  { return getTargetsForMonth(evalMonth).tpvMeta; }
+
+// ── Pago table ──
+function getPctPago(p) {
+  if (p < 80)    return 0;
+  if (p >= 200)  return 266.7;
+  if (p <= 100)  return 50 + (p-80)*2.5;
+  return 100 + (p-100)*1.333;
+}
+
+// ── Calidad score by TPV ──
+function calidadScore(tpv) {
+  if (tpv >= 700000) return 3;
+  if (tpv >= 500000) return 2.5;
+  if (tpv >= 300000) return 2;
+  if (tpv >= 100000) return 1.5;
+  if (tpv >= 60000)  return 1;
+  return 0;
+}
+
+// ── Calc storage ──
+const CALC_LS   = 'funnel_calc_v4';
+const CALC_FB   = 'calc_data';
+window._calcCache = null;
+
+function loadCalcData() {
+  if (window._calcCache) return window._calcCache;
+  try { const s=localStorage.getItem(CALC_LS); if(s){window._calcCache=JSON.parse(s);return window._calcCache;} } catch(e){}
+  window._calcCache = {};
+  return window._calcCache;
+}
+async function syncCalcToFirebase() {
+  if (!fbReady||!window._calcCache) return;
+  try { await db.collection('funnels').doc(CALC_FB).set({data:window._calcCache,updatedAt:new Date().toISOString()}); }
+  catch(e){ console.warn('Calc save failed:',e); }
+}
+async function loadCalcFromFirebase() {
+  if (!fbReady) return;
+  try {
+    const doc = await db.collection('funnels').doc(CALC_FB).get();
+    if (doc.exists&&doc.data().data) {
+      window._calcCache = doc.data().data;
+      localStorage.setItem(CALC_LS,JSON.stringify(window._calcCache));
+    }
+  } catch(e){ console.warn('Calc load failed:',e); }
+}
+function getCD(key,def='')       { const d=loadCalcData(); return d[key]!==undefined?d[key]:def; }
+function setCD(key,val)          { loadCalcData()[key]=val; localStorage.setItem(CALC_LS,JSON.stringify(window._calcCache)); syncCalcToFirebase(); }
+function getSellerData(id)       { return loadCalcData()[`s_${id}`]||{custId:'',acqDate:'',tipo:'normal',tpvM0:{},tpvM1:{}}; }
+function setSellerData(id,data)  { loadCalcData()[`s_${id}`]=data; localStorage.setItem(CALC_LS,JSON.stringify(window._calcCache)); syncCalcToFirebase(); }
+
+function getSellerAccumForPeriod(id,period) {
+  const sd=getSellerData(id);
+  const daily = period==='m0'?sd.tpvM0:sd.tpvM1;
+  return Object.values(daily||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+}
+function getSellerAccum(id) { return getSellerAccumForPeriod(id,'m1'); } // default = M1 for KPIs
+
+// ── getMesActual ──
+function getMesActual() {
+  const el=document.getElementById('c-mes');
+  return (el&&el.value)?el.value:new Date().toISOString().slice(0,7);
+}
+
+// ── FAST weekly ──
+function getFastWeeklyData() {
+  const now=new Date();
+  const curYear=now.getFullYear(), curMonth=now.getMonth()+1;
+  const weeks=[];
+  for(let w=0;w<4;w++){
+    const wStart=new Date(curYear,curMonth-1,1+w*7);
+    const wEnd  =new Date(wStart); wEnd.setDate(wEnd.getDate()+7);
+    const ws=wStart.toISOString().split('T')[0];
+    const we=wEnd.toISOString().split('T')[0];
+    // Only count if week is within current month
+    const inCurrentMonth = ws.startsWith(`${curYear}-${String(curMonth).padStart(2,'0')}`);
+    const count = w===0 ? (parseInt(getCD('sem1Manual','0'))||0) :
+      (!inCurrentMonth ? 0 : prospects.filter(p=>{
+        if(p.status!=='Calificación')return false;
+        const d=(p.capturedAt||p.last||'').split('T')[0];
+        return d&&d>=ws&&d<we;
+      }).length);
+    const neg=!inCurrentMonth?0:prospects.filter(p=>{const d=p.last?p.last.split('T')[0]:null;return d&&d>=ws&&d<we&&p.status==='Negociación';}).length;
+    const close=!inCurrentMonth?0:prospects.filter(p=>{const d=p.last?p.last.split('T')[0]:null;return d&&d>=ws&&d<we&&p.status==='Adquirida';}).length;
+    weeks.push({ws,we,count,neg,close,label:`Sem ${w+1}`,isManual:w===0});
+  }
+  return weeks;
+}
+
+function renderFastWeekly() {
+  const weeks=getFastWeeklyData();
+  const el=document.getElementById('fast-weekly-bars');
+  if(!el)return;
+  const today=new Date();
+  const isCur=i=>i===Math.floor((today.getDate()-1)/7);
+  el.innerHTML=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px;">
+    ${weeks.map((w,i)=>{
+      const pct=Math.min(100,Math.round((w.count/40)*100));
+      const met=w.count>=40, cur=isCur(i);
+      const col=met?'#880E4F':w.count>=30?'#E91E8C':w.count>0?'#F8BBD0':'var(--text3)';
+      return `<div style="background:var(--bg);border:1.5px solid ${cur?'#E91E8C':w.isManual?'#C9A84C':'var(--border)'};border-radius:var(--rs);padding:10px 12px;text-align:center;">
+        <div style="font-size:10px;font-weight:700;color:${w.isManual?'#C9A84C':'var(--text3)'};text-transform:uppercase;margin-bottom:4px;">${w.label}${w.isManual?' ✏️':''}</div>
+        ${w.isManual
+          ?`<input type="number" value="${w.count}" min="0" max="999"
+              style="width:70px;text-align:center;font-size:22px;font-weight:800;color:#C9A84C;font-family:'Inter',sans-serif;border:none;border-bottom:2px solid #C9A84C;background:transparent;outline:none;"
+              oninput="setCD('sem1Manual',this.value);renderFastWeekly();calcIncentivos()">`
+          :`<div style="font-size:22px;font-weight:800;color:${col};font-family:'Inter',sans-serif;">${w.count}</div>`}
+        <div style="font-size:10px;color:var(--text3);margin:4px 0 6px;">/ 40 leads</div>
+        <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${col};border-radius:2px;transition:width .3s;"></div>
+        </div>
+        <div style="font-size:10px;margin-top:4px;color:${col}">${met?'✓ Cumplida':cur?'En curso':w.count>0?`${40-w.count} falt.`:'—'}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <div style="font-size:11px;color:var(--text3);">✏️ Sem 1 = manual · Sem 2–4 = automático del portal</div>`;
+}
+
+// ── renderCalc ──
+function renderCalc() {
+  console.trace("renderCalc called");
+  // Guard: only run if calc is active view
+  if(currentView !== "calc") { console.warn("renderCalc called while view="+currentView); return; }
+  const now=new Date().toISOString().slice(0,7);
+  const mesEl=document.getElementById('c-mes');
+  if(mesEl&&!mesEl.value) mesEl.value=getCD('mes',now);
+  document.getElementById('f-sem-neg').value   = getCD('fastNeg','0');
+  document.getElementById('f-sem-close').value = getCD('fastClose','0');
+  const fastToggle = document.getElementById('fast-active-toggle');
+  if(fastToggle) fastToggle.checked = getCD('fastConfigured','false')==='true';
+  document.getElementById('e-software-n').value= getCD('softwareN','0');
+  document.getElementById('e-devices-n').value = getCD('devicesN','0');
+  document.getElementById('e-otros').value     = getCD('otros','0');
+  renderTpvList();
+  renderFastWeekly();
+  calcIncentivos();
+  renderPortfolioHistory();
+}
+
+// ── Seller card with M0+M1 periods ──
+function renderTpvList() {
+  if(currentView !== "calc") return;
+  if(document.getElementById('c-mes')?.value) setCD('mes',document.getElementById('c-mes').value);
+  const mes=getMesActual();
+  const [year,month]=mes.split('-').map(Number);
+  // M0 sellers: acquired in current eval month
+  const m0Start=`${year}-${String(month).padStart(2,'0')}`;
+  // M1 sellers: acquired in previous month
+  const prevMonth=month===1?12:month-1;
+  const prevYear =month===1?year-1:year;
+  const m1Start=`${prevYear}-${String(prevMonth).padStart(2,'0')}`;
+
+  const adquiridos=prospects.filter(p=>p.status==='Adquirida');
+  const m0sellers=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m0Start));
+  const m1sellers=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m1Start));
+
+  const today=new Date();
+  const fmt=n=>`$${Math.round(n).toLocaleString('es-MX')}`;
+  const tipoOpts=`<option value="normal">Normal (×1)</option><option value="pj">PJ Moral (×1.5)</option><option value="renta">+Renta>$5k (+0.5)</option><option value="pj_renta">PJ+Renta (×2)</option>`;
+  const tipoMap={normal:1,pj:1.5,renta:1.5,pj_renta:2};
+
+  function daysInMonth(y,m){ return new Date(y,m,0).getDate(); }
+
+  function sellerCard(p, section) {
+    const sd=getSellerData(p.id);
+    const custId =sd.custId ||p.custId ||'';
+    const acqDate=sd.acqDate||p.acqDate||(p.last?p.last.split('T')[0]:'');
+    const tipo   =sd.tipo   ||'normal';
+    const isOpen =getCD(`open_${p.id}`)===`${section}_open`;
+
+    // Determine seller's M0 month and M1 month from acqDate
+    const [ady,adm]=acqDate?(acqDate.split('-').map(Number)):[prevYear,prevMonth];
+    const sellerM0Year=ady, sellerM0Month=adm;
+    const sellerM1Month=adm===12?1:adm+1;
+    const sellerM1Year =adm===12?ady+1:ady;
+
+    // TPV for each period
+    const accumM0=Object.values(sd.tpvM0||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+    const accumM1=Object.values(sd.tpvM1||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+
+    // KPI evaluation
+    const adqPts = section==='m0'
+      ? (accumM0>=TPV_MIN_ADQ?(tipoMap[tipo]||1):0)
+      : 0;
+    const calPtsM0=calidadScore(accumM0);
+    const calPtsM1=calidadScore(accumM1);
+
+    // Probability of reaching cal threshold in M1
+    const metaTpvM1=getMetaTpv(mes);
+    const metaCalM1=getMetaCal(mes);
+    const probCal = accumM1>=CAL_MIN_TPV?100:Math.round((accumM1/CAL_MIN_TPV)*100);
+    const probTpv = Math.min(100,Math.round((accumM1/Math.max(metaTpvM1/Math.max(metaCalM1,1),1))*100));
+
+    // Best day analysis
+    function bestDay(tpvObj){ let best={day:0,val:0}; Object.entries(tpvObj||{}).forEach(([d,v])=>{const n=parseFloat(v)||0;if(n>best.val)best={day:d,val:n};}); return best; }
+    const bestM0=bestDay(sd.tpvM0||{});
+    const bestM1=bestDay(sd.tpvM1||{});
+    const betterMonth=accumM0>accumM1?'M0':'M1';
+
+    // Day inputs
+    function dayInputs(period, readOnly=false) {
+      const periodYear = period==='m0'?sellerM0Year:sellerM1Year;
+      const periodMonth= period==='m0'?sellerM0Month:sellerM1Month;
+      const days=daysInMonth(periodYear,periodMonth);
+      const tpvData=period==='m0'?(sd.tpvM0||{}):(sd.tpvM1||{});
+      const todayDay=(today.getFullYear()===periodYear&&today.getMonth()+1===periodMonth)?today.getDate():days;
+      const rows=[];
+      const lockedBg = 'background:#F5F5F5;opacity:.55;cursor:not-allowed;pointer-events:none;';
+      for(let d=1;d<=days;d++){
+        const val=tpvData[d]||'';
+        const isPast=d<=todayDay;
+        const inputStyle = readOnly
+          ? `flex:1;padding:5px 8px;border:1px solid var(--border-s);border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;text-align:right;${lockedBg}`
+          : `flex:1;padding:5px 8px;border:1px solid ${val?'#A7F3D0':'var(--border-s)'};border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;text-align:right;background:${val?'#F0FDF4':isPast?'#FAFAFA':'var(--bg)'};font-weight:${val?'600':'400'};`;
+        rows.push(`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:600;color:${isPast?'var(--text2)':'var(--text3)'};width:28px;flex-shrink:0;">D${d}</div>
+          <div style="font-size:11px;color:var(--text3);flex-shrink:0;">$</div>
+          <input id="day_${p.id}_${period}_${d}" type="text" inputmode="decimal" placeholder="0.00" value="${val}"
+            style="${inputStyle}"
+            ${readOnly ? 'readonly disabled' : `oninput="updateSellerTpv(${p.id},'${period}',${d},this.value)"
+            onkeydown="if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();const n=document.getElementById('day_${p.id}_${period}_${d+1}');if(n){n.focus();n.select();}}"
+            onblur="if(this.value){const n=document.getElementById('day_${p.id}_${period}_${d+1}');if(n&&!n.value)setTimeout(()=>{n.focus();n.select();},80);}"`}>
+        </div>`);
+      }
+      const header = readOnly ? `<div style="padding:6px 16px;background:#FEF3C7;font-size:11px;color:#92400E;border-bottom:1px solid var(--border);">🔒 Bloqueado — seller ya en M1, datos de M0 de solo lectura</div>` : '';
+      return `<div style="background:var(--bg);">${header}<div style="padding:8px 16px 12px;">${rows.join('')}</div></div>`;
+    }
+
+    const isM0Open = getCD(`open_${p.id}_m0`,'false')==='true';
+    const isM1Active = section==='m1';  // If viewing in M1 context, M0 is read-only
+    const isM1Open = getCD(`open_${p.id}_m1`,'false')==='true';
+    const thisOpen = null; // unused now
+
+    const MN=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+    return `<div style="border-bottom:1px solid var(--border);">
+      <!-- Header -->
+      <div style="padding:12px 16px;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">${p.name}</div>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+              <span style="font-size:13px;color:var(--text2);">ID: <input type="text" value="${custId}" placeholder="Cust ID"
+                style="border:none;border-bottom:1px dashed var(--border-s);background:transparent;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100px;outline:none;"
+                onchange="updateSellerMeta(${p.id},'custId',this.value)"></span>
+              <span style="font-size:13px;color:var(--text2);">Adq: <input type="date" value="${acqDate}"
+                style="border:none;border-bottom:1px dashed var(--border-s);background:transparent;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);outline:none;"
+                onchange="updateSellerMeta(${p.id},'acqDate',this.value)"></span>
+              ${section==='m0'?`<select style="border:none;border-bottom:1px dashed var(--border-s);background:transparent;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);outline:none;"
+                onchange="updateSellerMeta(${p.id},'tipo',this.value)">
+                ${tipoOpts.replace(`value="${tipo}"`,`value="${tipo}" selected`)}</select>`:''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Two period tabs -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+          <!-- M0 period -->
+          <div style="border:1.5px solid ${isM0Open?'var(--s-cal)':'var(--border)'};border-radius:var(--rs);overflow:hidden;">
+            <div style="padding:8px 12px;background:${isM0Open?'var(--sb-cal)':'var(--bg)'};cursor:pointer;display:flex;align-items:center;justify-content:space-between;"
+              onclick="toggleSellerPeriod(${p.id},'m0')">
+              <div>
+                <div style="font-size:11px;font-weight:700;color:var(--s-cal);">M0 · ${MN[sellerM0Month-1]} ${sellerM0Year}</div>
+                <div id="accum_m0_${p.id}" style="font-size:15px;font-weight:700;color:${accumM0>0?'var(--s-adq)':'var(--text3)'};">${accumM0>0?fmt(accumM0):'$0'}</div>
+                <div style="font-size:10px;color:var(--text3);">${accumM0>=TPV_MIN_ADQ?`✓ ${adqPts}pts adq`:'< $5k'} ${bestM0.val>0?`· Mejor D${bestM0.day}: ${fmt(bestM0.val)}`:''}</div>
+              </div>
+              <div style="font-size:12px;color:var(--text3);">${isM0Open?'▲':'▼'}</div>
+            </div>
+            ${isM0Open?dayInputs('m0', section==='m1'):''}
+          </div>
+
+          <!-- M1 period -->
+          <div style="border:1.5px solid ${isM1Open?'var(--s-ace)':'var(--border)'};border-radius:var(--rs);overflow:hidden;">
+            <div style="padding:8px 12px;background:${isM1Open?'var(--sb-ace)':'var(--bg)'};cursor:pointer;display:flex;align-items:center;justify-content:space-between;"
+              onclick="toggleSellerPeriod(${p.id},'m1')">
+              <div>
+                <div style="font-size:11px;font-weight:700;color:var(--s-ace);">M1 · ${MN[sellerM1Month-1]} ${sellerM1Year}</div>
+                <div id="accum_m1_${p.id}" style="font-size:15px;font-weight:700;color:${accumM1>0?'var(--s-adq)':'var(--text3)'};">${accumM1>0?fmt(accumM1):'$0'}</div>
+                <div style="font-size:10px;color:var(--text3);">${accumM1>=CAL_MIN_TPV?`✓ ${calPtsM1}pts cal`:`${probCal}% prob cal`} ${bestM1.val>0?`· Mejor D${bestM1.day}: ${fmt(bestM1.val)}`:''}</div>
+              </div>
+              <div style="font-size:12px;color:var(--text3);">${isM1Open?'▲':'▼'}</div>
+            </div>
+            ${isM1Open?dayInputs('m1'):''}
+          </div>
+        </div>
+
+        <!-- Comparativa -->
+        ${(accumM0>0||accumM1>0)?`<div style="margin-top:8px;padding:6px 10px;background:var(--bg);border-radius:6px;font-size:11px;color:var(--text3);">
+          Mejor mes: <strong style="color:${betterMonth==='M0'?'var(--s-cal)':'var(--s-ace)'}">${betterMonth}</strong>
+          ${betterMonth==='M0'?`(${fmt(accumM0)} vs ${fmt(accumM1)})`:`(${fmt(accumM1)} vs ${fmt(accumM0)})`}
+          ${section==='m1'&&accumM1<CAL_MIN_TPV?` · Falta ${fmt(CAL_MIN_TPV-accumM1)} para calidad`:''}
+        </div>`:''}
+      </div>
+    </div>`;
+  }
+
+  const mesNombre=MN_FULL[month-1], mesAnt=MN_FULL[prevMonth-1];
+  const metaAdq=getMetaAdq(mes), metaCal=getMetaCal(mes), metaTpv=getMetaTpv(mes);
+
+  let html=`<div style="padding:8px 16px;background:var(--sb-cal);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+    <span style="font-size:11px;font-weight:700;color:var(--s-cal);text-transform:uppercase;letter-spacing:.06em;">
+      M0 — Adquisición · ${mesNombre} ${year} · Meta: ${metaAdq} sellers >$5k · ${m0sellers.length} adquiridos
+    </span>
+    <button onclick="openModal()" style="background:var(--s-cal);color:#fff;border:none;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">+ Nuevo seller</button>
+  </div>`;
+  if(!m0sellers.length) html+=`<div style="padding:12px 16px;font-size:13px;color:var(--text3);">Sin sellers nuevos en ${mesNombre}</div>`;
+  else m0sellers.forEach(p=>{html+=sellerCard(p,'m0');});
+
+  html+=`<div style="padding:8px 16px;background:var(--sb-ace);border-top:2px solid var(--border);border-bottom:1px solid var(--border);">
+    <span style="font-size:11px;font-weight:700;color:var(--s-ace);text-transform:uppercase;letter-spacing:.06em;">
+      M1 — Calidad + TPV · ${mesAnt} ${prevYear} · Meta: ${metaCal} pts cal + ${fmt(metaTpv)} TPV · ${m1sellers.length} sellers
+    </span>
+  </div>`;
+  if(!m1sellers.length) html+=`<div style="padding:12px 16px;font-size:13px;color:var(--text3);">Sin sellers de ${mesAnt}</div>`;
+  else m1sellers.forEach(p=>{html+=sellerCard(p,'m1');});
+
+  document.getElementById('tpv-list').innerHTML=html;
+  updateTpvSummary();
+}
+
+function toggleSellerPeriod(id,period) {
+  const key=`open_${id}_${period}`;
+  const cur=getCD(key,'false');
+  setCD(key, cur==='true'?'false':'true');
+  renderTpvList();
+}
+
+function updateSellerTpv(id,period,day,val) {
+  const sd=getSellerData(id);
+  if(period==='m0'){if(!sd.tpvM0)sd.tpvM0={};sd.tpvM0[day]=val;}
+  else{if(!sd.tpvM1)sd.tpvM1={};sd.tpvM1[day]=val;}
+  setSellerData(id,sd);
+  const accumM0=Object.values(sd.tpvM0||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+  const accumM1=Object.values(sd.tpvM1||{}).reduce((s,v)=>s+(parseFloat(v)||0),0);
+  const fmt=n=>`$${Math.round(n).toLocaleString('es-MX')}`;
+  const el0=document.getElementById(`accum_m0_${id}`);
+  const el1=document.getElementById(`accum_m1_${id}`);
+  if(el0)el0.textContent=accumM0>0?fmt(accumM0):'$0';
+  if(el1)el1.textContent=accumM1>0?fmt(accumM1):'$0';
+  updateTpvSummary();
+  calcIncentivos();
+}
+
+function updateSellerMeta(id,field,val) {
+  const sd=getSellerData(id);
+  sd[field]=val;
+  setSellerData(id,sd);
+  const idx=prospects.findIndex(p=>p.id===id);
+  if(idx>-1&&(field==='custId'||field==='acqDate')){
+    prospects[idx][field==='custId'?'custId':'acqDate']=val;
+    saveDataTracked(prospects);
+  }
+  renderPortfolioHistory();
+}
+
+function updateTpvSummary() {
+  const mes=getMesActual();
+  const [year,month]=mes.split('-').map(Number);
+  const m0Start=`${year}-${String(month).padStart(2,'0')}`;
+  const prevMonth=month===1?12:month-1;
+  const prevYear =month===1?year-1:year;
+  const m1Start=`${prevYear}-${String(prevMonth).padStart(2,'0')}`;
+  const adquiridos=prospects.filter(p=>p.status==='Adquirida');
+  const m0=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m0Start));
+  const m1=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m1Start));
+  const tipoMap={normal:1,pj:1.5,renta:1.5,pj_renta:2};
+  const totalAdqPts=m0.reduce((s,p)=>{
+    const sd=getSellerData(p.id);
+    const acc=Object.values(sd.tpvM0||{}).reduce((a,v)=>a+(parseFloat(v)||0),0);
+    if(acc<TPV_MIN_ADQ)return s;
+    return s+(tipoMap[sd.tipo||'normal']||1);
+  },0);
+  const totalCalPts=m1.reduce((s,p)=>{
+    const acc=Object.values(getSellerData(p.id).tpvM1||{}).reduce((a,v)=>a+(parseFloat(v)||0),0);
+    return s+calidadScore(acc);
+  },0);
+  const totalTpv=m1.reduce((s,p)=>{
+    return s+Object.values(getSellerData(p.id).tpvM1||{}).reduce((a,v)=>a+(parseFloat(v)||0),0);
+  },0);
+  const metaAdq=getMetaAdq(mes),metaCal=getMetaCal(mes),metaTpv=getMetaTpv(mes);
+  const fmt=n=>`$${Math.round(n).toLocaleString('es-MX')}`;
+  const el=document.getElementById('tpv-summary');
+  if(el) el.innerHTML=`Adq: <span style="color:var(--s-cal)">${totalAdqPts.toFixed(1)}</span>/${metaAdq} &nbsp;·&nbsp; Cal: <span style="color:var(--s-ace)">${totalCalPts.toFixed(1)}</span>/${metaCal} &nbsp;·&nbsp; TPV M1: <span style="color:var(--s-adq)">${fmt(totalTpv)}</span>/${fmt(metaTpv)}`;
+  window._adqPts=totalAdqPts; window._calPts=totalCalPts; window._tpvM1=totalTpv;
+  window._metaAdq=metaAdq; window._metaCal=metaCal; window._metaTpv=metaTpv;
+}
+
+function calcIncentivos() {
+  setCD('fastNeg',  document.getElementById('f-sem-neg')?.value||'0');
+  setCD('fastClose',document.getElementById('f-sem-close')?.value||'0');
+  setCD('softwareN',document.getElementById('e-software-n')?.value||'0');
+  setCD('devicesN', document.getElementById('e-devices-n')?.value||'0');
+  setCD('otros',    document.getElementById('e-otros')?.value||'0');
+
+  const mes=getMesActual();
+  const totalAdqPts=window._adqPts||0;
+  const totalCalPts=window._calPts||0;
+  const totalTpv   =window._tpvM1||0;
+  const metaAdq    =window._metaAdq||getMetaAdq(mes);
+  const metaCal    =window._metaCal||getMetaCal(mes);
+  const metaTpv    =window._metaTpv||getMetaTpv(mes);
+
+  // FAST — penalty only when checkbox active AND semCal < 4; boosts always add when > 0
+  const fastWeeks=getFastWeeklyData();
+  const semCal=fastWeeks.filter(w=>w.count>=40).length;
+  const semNeg  =parseInt(document.getElementById('f-sem-neg')?.value)||0;
+  const semClose=parseInt(document.getElementById('f-sem-close')?.value)||0;
+  const fastConfigured = getCD('fastConfigured','false')==='true';
+  // Penalty only if checkbox active; boosts always apply if >0
+  const fastPen        = fastConfigured ? Math.max(-10,(4-semCal)*-2.5) : 0;
+  const fastBoostNeg   = semNeg > 0 ? Math.min(4,semNeg) : 0;
+  const fastBoostClose = semClose > 0 ? Math.min(4,semClose) : 0;
+  const fastTotal = fastPen + fastBoostNeg + fastBoostClose;
+
+  // Extras: Software/Otros always add when >0; Devices always penalizes when >0
+  const softwareN  = parseInt(document.getElementById('e-software-n')?.value)||0;
+  const devicesN   = parseInt(document.getElementById('e-devices-n')?.value)||0;
+  const otros      = parseFloat(document.getElementById('e-otros')?.value)||0;
+  const softwarePct = softwareN > 0 ? Math.min(10, softwareN * 2.5) : 0;
+  const devicesPct  = devicesN > 0 ? devicesN * -1 : 0;
+  const totalExtras = fastTotal + softwarePct + devicesPct + otros;
+
+  const pctAdq=Math.min(200,metaAdq>0?(totalAdqPts/metaAdq)*100:0);
+  const pctCal=Math.min(200,metaCal>0?(totalCalPts/metaCal)*100:0);
+  const pctTpv=Math.min(200,metaTpv>0?(totalTpv/metaTpv)*100:0);
+  // M0 month: no calidad KPI, ponderacion is 40% adq + 60% tpv
+  const rm=getRampMonth(mes);
+  let wAdq,wCal,wTpv;
+  if(rm===0){ wAdq=pctAdq*0.40; wCal=0; wTpv=pctTpv*0.60; }
+  else       { wAdq=pctAdq*0.20; wCal=pctCal*0.50; wTpv=pctTpv*0.30; }
+  const totalCump=wAdq+wCal+wTpv;
+  const cumplFinal=totalCump+totalExtras;
+  const pctPago=getPctPago(cumplFinal);
+  const bonoEst=BONO_VARIABLE*pctPago/100;
+  const ingTotal=29000+bonoEst;
+  const fmt=n=>`$${Math.round(n).toLocaleString('es-MX')}`;
+  const pf=n=>`${n.toFixed(1)}%`;
+  const col=p=>p>=100?'#880E4F':p>=80?'#E91E8C':'#F48FB1';
+
+  // Fast status
+  const fastEl=document.getElementById('fast-status');
+  if(fastEl) fastEl.innerHTML = !fastConfigured
+    ? `<div style="padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--text3);">
+        ⚠ FAST no activo en el cálculo — activa el checkbox para incluir penalizaciones y boosters
+       </div>`
+    : `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+    ${[
+      {label:`Leads: ${semCal}/4 sem`,val:fastPen},
+      {label:`Neg ≥12: ${semNeg} sem`,val:fastBoostNeg},
+      {label:`Closing ≥3: ${semClose} sem`,val:fastBoostClose},
+    ].map(f=>`<div style="background:${f.val===0?'var(--bg)':f.val>0?'var(--sb-ace)':'var(--sb-rec)'};border:1px solid ${f.val>0?'#A7F3D0':f.val<0?'#FECACA':'var(--border)'};border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:${f.val>0?'var(--s-ace)':f.val<0?'var(--s-rec)':'var(--text2)'};">
+      ${f.label}: ${f.val>=0?'+':''}${pf(f.val)}</div>`).join('')}
+  </div>`;
+
+  // Metric cards
+  const metricCols=rm===0?[
+    {label:'Adq M0',    val:`${totalAdqPts.toFixed(1)} pts`,meta:`${metaAdq}`,pct:pctAdq,w:'40%'},
+    {label:'TPV M0',    val:fmt(totalTpv),                  meta:fmt(metaTpv),pct:pctTpv,w:'60%'},
+  ]:[
+    {label:'Adq M0',    val:`${totalAdqPts.toFixed(1)} pts`,meta:`${metaAdq}`,pct:pctAdq,w:'20%'},
+    {label:'Calidad M1',val:`${totalCalPts.toFixed(1)} pts`,meta:`${metaCal}`,pct:pctCal,w:'50%'},
+    {label:'TPV M1',    val:fmt(totalTpv),                  meta:fmt(metaTpv),pct:pctTpv,w:'30%'},
+  ];
+  const rmEl=document.getElementById('result-metrics');
+  if(rmEl) rmEl.innerHTML=metricCols.map(m=>{const c=col(m.pct);return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;">
+    <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">${m.label} <span>(${m.w})</span></div>
+    <div style="font-size:20px;font-weight:700;color:${c};line-height:1.1;">${m.val}</div>
+    <div style="font-size:11px;color:var(--text3);margin:2px 0 6px;">meta: ${m.meta}</div>
+    <div style="height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:4px;">
+      <div style="height:100%;width:${Math.min(100,m.pct)}%;background:${c};border-radius:3px;"></div>
+    </div>
+    <div style="font-size:11px;font-weight:700;color:${c}">${pf(m.pct)}</div>
+  </div>`;}).join('');
+
+  // Table
+  const rtEl=document.getElementById('result-table');
+  if(rtEl) rtEl.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="background:var(--bg);">
+      ${['Métrica','Peso','Meta','Resultado','% Cumpl.','Ponderado'].map(h=>`<th style="padding:8px 12px;text-align:${h==='Métrica'?'left':'center'};font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">${h}</th>`).join('')}
+    </tr></thead>
+    <tbody>
+      ${metricCols.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:9px 12px;font-weight:600;">${r.label}</td>
+        <td style="padding:9px 12px;text-align:center;color:var(--text2);">${r.w}</td>
+        <td style="padding:9px 12px;text-align:center;">${r.meta}</td>
+        <td style="padding:9px 12px;text-align:center;font-weight:600;">${r.val}</td>
+        <td style="padding:9px 12px;text-align:center;font-weight:700;color:${col(r.pct)}">${pf(r.pct)}</td>
+        <td style="padding:9px 12px;text-align:center;font-weight:700;color:${col(r.pct)}">${pf(r.pct*(parseFloat(r.w)/100))}</td>
+      </tr>`).join('')}
+      <tr style="background:var(--bg);font-weight:700;border-top:2px solid var(--border);">
+        <td colspan="5" style="padding:9px 12px;text-align:right;">Cumplimiento base</td>
+        <td style="padding:9px 12px;text-align:center;font-size:15px;color:${col(totalCump)}">${pf(totalCump)}</td>
+      </tr>
+      <tr><td colspan="5" style="padding:9px 12px;text-align:right;color:var(--text2);">FAST + Extras</td>
+        <td style="padding:9px 12px;text-align:center;font-weight:700;color:${totalExtras>=0?'var(--s-ace)':'var(--s-rec)'};">${totalExtras>=0?'+':''}${pf(totalExtras)}</td>
+      </tr>
+      <tr style="background:var(--bg);font-weight:700;">
+        <td colspan="5" style="padding:9px 12px;text-align:right;">Cumplimiento Final → % Pago: ${pf(pctPago)}</td>
+        <td style="padding:9px 12px;text-align:center;font-size:16px;color:${col(cumplFinal)}">${pf(cumplFinal)}</td>
+      </tr>
+    </tbody></table>`;
+
+  // Final result panel
+  const rfEl=document.getElementById('result-final');
+  if(rfEl) rfEl.innerHTML=`
+    <div style="background:linear-gradient(135deg,#4A0E2E,#7B1C4A,#B5860D);border-radius:var(--r);padding:18px 22px;">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em;">
+        Mes ${getRampMonth(mes)+1} de ramp-up · ${getTargetsForMonth(mes).label} · ${MN_FULL[parseInt(mes.split('-')[1])-1]} ${mes.split('-')[0]}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;align-items:start;">
+        <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Cumplimiento Final</div>
+          <div style="font-size:32px;font-weight:800;color:${cumplFinal>=100?'#F8BBD0':cumplFinal>=80?'#FFE600':'#E53935'};font-family:'Inter',sans-serif;">${pf(cumplFinal)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;">${cumplFinal>=80?'✓ Califica':'✗ Mín 80%'}</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">% de Pago</div>
+          <div style="font-size:26px;font-weight:700;color:#FFE600;">${pf(pctPago)}</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Bono estimado</div>
+          <div style="font-size:26px;font-weight:700;color:${cumplFinal>=80?'#F8BBD0':'#E53935'};">${cumplFinal>=80?fmt(bonoEst):'$0'}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">variable $12,428.57</div></div>
+        <div><div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ingreso total</div>
+          <div style="font-size:26px;font-weight:700;color:#fff;">${cumplFinal>=80?fmt(ingTotal):fmt(29000)}</div></div>
+      </div>
+      ${cumplFinal<100?`<div style="margin-top:12px;padding:10px 14px;background:rgba(255,230,0,.08);border:1px solid rgba(255,230,0,.15);border-radius:8px;font-size:12px;color:rgba(255,255,255,.7);">
+        <strong style="color:#FFE600;">¿Qué falta para 100%?</strong><br>
+        ${totalAdqPts<metaAdq?`· Adq: ${(metaAdq-totalAdqPts).toFixed(1)} pts más<br>`:''}
+        ${totalCalPts<metaCal?`· Cal: ${(metaCal-totalCalPts).toFixed(1)} pts más<br>`:''}
+        ${totalTpv<metaTpv?`· TPV: ${fmt(metaTpv-totalTpv)} más`:''}
+      </div>`:''}
+    </div>`;
+}
+
+
+// ── Section toggles ──
+function toggleSection(id, iconId) {
+  const el = document.getElementById(id);
+  const icon = document.getElementById(iconId);
+  if (!el) return;
+  const isHidden = el.style.display === 'none';
+  el.style.display = isHidden ? '' : 'none';
+  if (icon) icon.textContent = isHidden ? '▼' : '▶';
+  setCD('sec_'+id, isHidden ? 'open' : 'closed');
+}
+function initSection(id, iconId, defaultOpen=true) {
+  const state = getCD('sec_'+id, defaultOpen ? 'open' : 'closed');
+  const el = document.getElementById(id);
+  const icon = document.getElementById(iconId);
+  if (el) el.style.display = state === 'open' ? '' : 'none';
+  if (icon) icon.textContent = state === 'open' ? '▼' : '▶';
+}
+let _portfolioOpen = true;
+function togglePortfolio() {
+  const wrap = document.getElementById('portfolio-history-wrap');
+  const icon = document.getElementById('portfolio-toggle-icon');
+  if (!wrap) return;
+  _portfolioOpen = !_portfolioOpen;
+  wrap.style.display = _portfolioOpen ? '' : 'none';
+  if (icon) icon.textContent = _portfolioOpen ? '▼' : '▶';
+}
+
+function renderPortfolioHistory() {
+  if(currentView !== "calc" && currentView !== "tasas") return;
+  const el = document.getElementById('portfolio-history');
+  if (!el) return;
+
+  // Ensure calc cache is initialized
+  if (!window._calcCache) loadCalcData();
+
+  // Get mes from input or use current month
+  const mesEl = document.getElementById('c-mes');
+  const mes = (mesEl && mesEl.value) ? mesEl.value : new Date().toISOString().slice(0,7);
+  const [year, month] = mes.split('-').map(Number);
+  const fmt = n => `$${Math.round(n).toLocaleString('es-MX')}`;
+
+  // Always use TODAY's actual month for portfolio classification (not eval month)
+  const todayNow = new Date();
+  const todayYear = todayNow.getFullYear(), todayMonth = todayNow.getMonth()+1;
+
+  const all = prospects
+    .filter(p => p.status === 'Adquirida')
+    .map(p => {
+      const sd = getSellerData(p.id);
+      const dateStr = sd.acqDate || p.acqDate || (p.last ? p.last.split('T')[0] : null);
+      if (!dateStr) return null;
+      const [y,m] = dateStr.split('-').map(Number);
+      // relMonth = 0 means acquired this month (M0), 1 = last month (M1), 2+ = out of portfolio
+      const diff = (todayYear - y)*12 + (todayMonth - m);
+      const custId = sd.custId || p.custId || '—';
+      const acqLabel = (() => { const [ay,am,ad]=dateStr.split('-'); return `${parseInt(ad)} ${MN_SHORT[parseInt(am)-1]} ${ay}`; })();
+      return {...p, relMonth: diff, acqDateStr: dateStr, custId, acqLabel};
+    })
+    .filter(Boolean)
+    .sort((a,b) => a.acqDateStr.localeCompare(b.acqDateStr));
+
+  if (!all.length) { el.innerHTML = '<div style="padding:16px;color:var(--text3);font-size:13px;">Sin sellers adquiridos</div>'; return; }
+
+  // Group by relMonth
+  const grouped = {};
+  all.forEach(p => {
+    const key = p.relMonth;
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(p);
+  });
+
+  let html = '';
+  Object.keys(grouped).sort((a,b)=>parseInt(a)-parseInt(b)).forEach(mKey => {
+    const list = grouped[mKey];
+    const rel  = parseInt(mKey);
+    const isActive = rel <= 1;
+    const mLabel = rel === 0
+      ? `M0 — Adquisición · ${MN_SHORT[todayMonth-1]} ${todayYear} (mes actual)`
+      : rel === 1
+      ? `M1 — Calidad + TPV · ${MN_SHORT[todayMonth<2?11:todayMonth-2]} ${todayMonth<2?todayYear-1:todayYear}`
+      : `M${rel} — adquiridos en ${MN_SHORT[((todayMonth-rel-1+120)%12)]}`;
+    const badge = rel===0 ? '✓ Adquisición activa (M0)'
+                : rel===1 ? '✓ Calidad + TPV activo (M1)'
+                : '⚠ Fuera del portafolio';
+    const bg    = rel===0 ? 'var(--sb-cal)' : rel===1 ? 'var(--sb-ace)' : '#F5F5F5';
+    const color = rel===0 ? 'var(--s-cal)'  : rel===1 ? 'var(--s-ace)'  : 'var(--text3)';
+    const badgeColor = isActive ? color : '#92400E';
+    const badgeBg    = isActive ? bg    : '#FFFBEB';
+
+    html += `<div>
+      <div style="padding:10px 16px;background:${bg};border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;">
+        <span style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:.06em;">${mLabel} · ${list.length} sellers</span>
+        <span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:10px;background:${badgeBg};color:${badgeColor};">${badge}</span>
+      </div>`;
+    list.forEach(p => {
+      // Show M0 TPV for rel=0, M1 TPV for rel=1, best for M2+
+      const accumM0 = getSellerAccumForPeriod(p.id,'m0');
+      const accumM1 = getSellerAccumForPeriod(p.id,'m1');
+      const accum   = rel===0 ? accumM0 : accumM1;
+      const calPts = calidadScore(accum);
+      html += `<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--border);${!isActive?'opacity:.6':''}">
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">ID: <strong>${p.custId}</strong> · Adq: ${p.acqLabel}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          ${accum > 0
+            ? `<div style="font-size:13px;font-weight:700;color:var(--s-adq);">${fmt(accum)}</div>
+               <div style="font-size:10px;color:var(--text3);">${calPts} pts cal</div>`
+            : `<div style="font-size:12px;color:var(--text3);">Sin TPV</div>`}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+
+// ── Tasas Naturales ──
+const CATALOGO_TASAS = [
+  {
+    "g": "A",
+    "cat": "Beneficencia",
+    "mcc": "8398",
+    "acts": [
+      "Agrupaciones de autoayuda para alcohólicos y personas con otras adicciones",
+      "Asociaciones y organizaciones civiles",
+      "Otros servicios de asistencia social",
+      "Servicios comunitarios de alimentación, refugio y emergencia",
+      "Actividades culturales",
+      "Asistencia social de ayuda mutua",
+      "Refugio y de emergencia"
+    ]
+  },
+  {
+    "g": "A",
+    "cat": "Educación Básica",
+    "mcc": "8211/8241/8299",
+    "acts": [
+      "Escuelas de educación básica, media y para necesidades especiales",
+      "Escuelas de educación media superior del sector público",
+      "Escuelas de educación para necesidades especiales",
+      "Escuelas de educación preescolar y centros de estimulación temprana",
+      "Escuelas de educación primaria",
+      "Escuelas de educación secundaria general",
+      "Escuelas del sector privado que combinan diversos niveles de educación",
+      "Escuelas del sector público que combinan diversos niveles de educación",
+      "Escuelas que combinan diversos niveles de educación",
+      "Escuelas de computación del sector privado",
+      "Escuelas de idiomas",
+      "Escuelas de idiomas del sector público",
+      "Escuelas de arte",
+      "Escuelas de arte del sector público",
+      "Otros servicios educativos",
+      "Servicios de apoyo a la educación",
+      "Servicios educativos",
+      "En los términos de la ley general de educación",
+      "Escuelas de educación especial",
+      "Escuelas de educación preescolar del sector privado",
+      "Escuelas de educación preescolar del sector público",
+      "Escuelas de educación primaria del sector privado",
+      "Escuelas de educación primaria del sector público",
+      "Escuelas de educación secundaria general del sector privado",
+      "Escuelas de educación secundaria general del sector público"
+    ]
+  },
+  {
+    "g": "A",
+    "cat": "Guarderías",
+    "mcc": "8351",
+    "acts": [
+      "Guarderías",
+      "Guarderías del sector privado",
+      "Guarderías del sector público"
+    ]
+  },
+  {
+    "g": "A",
+    "cat": "Miscelánea",
+    "mcc": "5422",
+    "acts": [
+      "Comercio al por mayor de carne de aves",
+      "Comercio al por mayor de carnes",
+      "Comercio al por mayor de ganado y aves en pie",
+      "Comercio al por menor de carne de aves",
+      "Comercio al por menor de carnes",
+      "Comercio al por menor de carnes rojas",
+      "Comercio al por menor de frutas y verduras frescas",
+      "Comercio al por menor de pescados y mariscos",
+      "Comercio al por menor de productos naturistas, medicamentos homeopáticos y de complementos alimenticios",
+      "Comercio al por menor en tiendas de abarrotes, ultramarinos y misceláneas",
+      "Congelación de frutas y verduras",
+      "Congelación de guisos y otros alimentos preparados",
+      "Corte y empacado de carne de ganado, aves y otros animales comestibles",
+      "Elaboración de tortillas de maíz y molienda de nixtamal",
+      "Matanza de ganado, aves y otros animales comestibles",
+      "Matanza, empacado y procesamiento de carne de ganado",
+      "Piscicultura en agua salada",
+      "Preparación y envasado de pescados y mariscos",
+      "Ultramarinos y misceláneas",
+      "Cremas de cacahuate y avellanas",
+      "Verduras y guisos"
+    ]
+  },
+  {
+    "g": "A",
+    "cat": "Médicos y Dentistas",
+    "mcc": "742/8011/8021/8031/8041/8042/8049",
+    "acts": [
+      "Caza y captura",
+      "Cría y explotación de animales",
+      "Cunicultura y explotación de animales con pelaje fino",
+      "Elaboración de alimentos balanceados para animales",
+      "Explotación avícola",
+      "Explotación de bovinos para la producción de carne",
+      "Explotación de bovinos para otros propósitos",
+      "Explotación de bovinos sin especialización",
+      "Explotación de caprinos",
+      "Explotación de guajolotes o pavos",
+      "Explotación de otras aves para producción de carne y huevo",
+      "Explotación de otros animales",
+      "Explotación de ovinos",
+      "Explotación de ovinos y caprinos",
+      "Explotación de pollos para la producción de carne",
+      "Explotación de porcinos",
+      "Explotación de porcinos en granja",
+      "Explotación de porcinos en traspatio",
+      "Explotación de équidos",
+      "Fabricación de maquinaria y equipo pecuario",
+      "Ganadería",
+      "Producción de aves en incubadora",
+      "Servicios relacionados con la cría y explotación de animales",
+      "Servicios veterinarios",
+      "Servicios veterinarios para la ganadería prestados por el sector privado",
+      "Servicios veterinarios para la ganadería prestados por el sector público",
+      "Servicios veterinarios para mascotas prestados por el sector privado",
+      "Servicios veterinarios para mascotas prestados por el sector público",
+      "Consultorios de medicina especializada del sector privado",
+      "Consultorios de medicina especializada del sector público",
+      "Consultorios de medicina general del sector privado",
+      "Consultorios médicos",
+      "Consultorios dentales",
+      "Consultorios dentales del sector privado",
+      "Consultorios dentales del sector público",
+      "Clínicas de consultorios médicos del sector privado",
+      "Consultorios de psicología",
+      "Consultorios de quiropráctica",
+      "Consultorios de quiropráctica del sector privado",
+      "Consultorios de quiropráctica del sector público",
+      "Consultorios de optometría"
+    ]
+  },
+  {
+    "g": "A",
+    "cat": "Ferreterías y Refaccionarias",
+    "mcc": "5072/5074/5251/5533",
+    "acts": [
+      "Fabricación de enchufes, contactos, fusibles y otros accesorios para instalaciones eléctricas",
+      "Fabricación de herramientas de mano metálicas sin motor",
+      "Fabricación de tornillos, tuercas, remaches y similares",
+      "Maquinado de piezas y fabricación de tornillos",
+      "Fabricación de calderas industriales",
+      "Comercio al por menor en ferreterías y tlapalerías",
+      "Fabricación de herramientas de mano sin motor y utensilios de cocina metálicos",
+      "Comercio al por menor de partes y refacciones nuevas para automóviles, camionetas y camiones",
+      "Comercio al por menor de partes y refacciones usadas para automóviles, camionetas y camiones",
+      "Fabricación de asientos y accesorios interiores para vehículos automotores",
+      "Fabricación de autopartes de plástico",
+      "Fabricación de partes para vehículos automotores",
+      "Comercio al por menor en ferreterías",
+      "Comercio al por menor en tlapalerías"
+    ]
+  },
+  {
+    "g": "A",
+    "cat": "Salones de belleza",
+    "mcc": "7230",
+    "acts": [
+      "Salones de belleza",
+      "Estética",
+      "Peluquería",
+      "Barbería",
+      "SPA"
+    ]
+  },
+  {
+    "g": "B",
+    "cat": "Colegios y Universidades",
+    "mcc": "7911/8220/8244/8249",
+    "acts": [
+      "Compañías de danza",
+      "Compañías de danza del sector privado",
+      "Compañías de danza del sector público",
+      "Escuelas de deporte",
+      "Escuelas de deporte del sector privado",
+      "Escuelas de deporte del sector público",
+      "Escuelas de educación media superior",
+      "Escuelas de educación media superior del sector privado",
+      "Escuelas de educación superior",
+      "Escuelas de educación superior del sector privado",
+      "Escuelas de educación superior del sector público",
+      "Escuelas comerciales y secretariales",
+      "Escuelas comerciales y secretariales del sector privado",
+      "Escuelas comerciales y secretariales del sector público",
+      "Escuelas comerciales, de computación y de capacitación para ejecutivos",
+      "Escuelas de computación",
+      "Escuelas de computación del sector público",
+      "Escuelas de educación secundaria técnica del sector privado",
+      "Escuelas de educación secundaria técnica del sector público",
+      "Escuelas de educación técnica superior",
+      "Escuelas de educación técnica superior del sector público",
+      "Escuelas del sector privado dedicadas a la enseñanza de oficios",
+      "Escuelas para la capacitación de ejecutivos",
+      "Escuelas para la capacitación de ejecutivos del sector privado",
+      "Escuelas para la capacitación de ejecutivos del sector público",
+      "Servicios educativos",
+      "Escuelas de educación media técnica terminal",
+      "Escuelas de educación media técnica terminal del sector privado",
+      "Escuelas de educación media técnica terminal del sector público",
+      "Escuelas de educación secundaria técnica",
+      "Escuelas de oficios",
+      "Escuelas del sector público dedicadas a la enseñanza de oficios"
+    ]
+  },
+  {
+    "g": "B",
+    "cat": "Comida Rápida",
+    "mcc": "5814",
+    "acts": [
+      "Elaboración de alimentos frescos para consumo inmediato",
+      "Elaboración de helados y paletas",
+      "Restaurantes con servicio de preparación de antojitos",
+      "Restaurantes con servicio de preparación de pizzas, hamburguesas, hot dogs y pollos rostizados para llevar",
+      "Restaurantes de autoservicio",
+      "Restaurantes que preparan otro tipo de alimentos para llevar",
+      "Servicios de preparación de alimentos en unidades móviles",
+      "Preparación y venta de comida y antojitos en general",
+      "Restaurantes de comida para llevar"
+    ]
+  },
+  {
+    "g": "B",
+    "cat": "Gasolineras",
+    "mcc": "5541",
+    "acts": [
+      "Comercio al por menor de gasolina y diésel",
+      "Comercio al por menor de vehículos de motor, refacciones, combustibles y lubricantes",
+      "Comercio al por menor en estaciones de gas natural vehicular"
+    ]
+  }
+];
+
+
+const TASAS_A = [{e:1,r:'< $30,000',tc:3.50,nn:3.50},{e:2,r:'$30k – $100k',tc:2.25,nn:2.79},{e:3,r:'> $100,000',tc:2.04,nn:2.79}];
+const TASAS_B = [{e:1,r:'< $30,000',tc:3.50,nn:3.50},{e:2,r:'$30k – $100k',tc:3.00,nn:3.00},{e:3,r:'$100k – $299k',tc:2.79,nn:2.79},{e:4,r:'$300k – $499k',tc:2.59,nn:2.79},{e:5,r:'> $500,000',tc:2.29,nn:2.79}];
+
+function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[ñ]/g,'n').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+
+function detectGrupoTasa(actividad) {
+  const a = norm(actividad);
+  const aWords = new Set(a.split(' ').filter(w=>w.length>3));
+  let bestMatch=null, bestScore=0;
+
+  for (const cat of CATALOGO_TASAS) {
+    for (const act of cat.acts) {
+      const actNorm = norm(act);
+      const actWords = actNorm.split(' ').filter(w=>w.length>3);
+      if (!actWords.length) continue;
+      // Exact substring match = perfect score
+      if (a.includes(actNorm) || actNorm.includes(a)) {
+        if (1.0 > bestScore) { bestScore=1.0; bestMatch=cat; }
+        continue;
+      }
+      // Score = matching words / total act words (penalize short matches on long activities)
+      const matchCount = actWords.filter(w=>aWords.has(w)).length;
+      const score = matchCount / actWords.length;
+      // Require high threshold to avoid false positives
+      if (score > bestScore && score >= 0.65 && matchCount >= 3) {
+        bestScore=score; bestMatch=cat;
+      }
+    }
+  }
+  return bestMatch;
+}
+
+function calcAniosActivo(fechaStr) {
+  if (!fechaStr) return 0;
+  return (new Date() - new Date(fechaStr)) / (1000*60*60*24*365.25);
+}
+
+function validarTasaNatural() {
+  const actividad = document.getElementById('val-actividad')?.value?.trim()||'';
+  const fecha     = document.getElementById('val-fecha')?.value||'';
+  const el        = document.getElementById('val-result');
+  if (!el) return;
+  if (!actividad && !fecha) { el.innerHTML=''; return; }
+
+  const anios   = calcAniosActivo(fecha);
+  const cat     = actividad ? detectGrupoTasa(actividad) : null;
+  const cumple2 = anios >= 2;
+  const tasas   = cat?.g==='A' ? TASAS_A : cat?.g==='B' ? TASAS_B : null;
+  const aprueba = cumple2 && cat;
+  const col     = cat?.g==='A' ? '#009EE3' : '#FF6E00';
+  const fmt     = n=>`$${Math.round(n).toLocaleString('es-MX')}`;
+  const pf      = n=>`${n.toFixed(2)}%`;
+
+  let html = '';
+
+  // Antigüedad
+  html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--rs);margin-bottom:8px;background:${cumple2?'#ECFDF5':'#FEF2F2'};border:1px solid ${cumple2?'#A7F3D0':'#FECACA'};">
+    <div style="font-size:22px;">${cumple2?'✅':'❌'}</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:${cumple2?'#065F46':'#991B1B'};">
+        ${cumple2 ? `Antigüedad: ${anios.toFixed(1)} años ✓ Cumple mínimo de 2 años` : fecha ? `Antigüedad insuficiente: ${anios.toFixed(1)} años (faltan ${(2-anios).toFixed(1)} años)` : 'Ingresa la fecha de inicio'}
+      </div>
+      ${fecha?`<div style="font-size:11px;color:var(--text3);">Fecha inicio: ${fecha}</div>`:''}
+    </div>
+  </div>`;
+
+  // Giro
+  if (actividad) {
+    html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--rs);margin-bottom:8px;background:${cat?'#FFFBEB':'#FEF2F2'};border:1px solid ${cat?'#FDE68A':'#FECACA'};">
+      <div style="font-size:22px;">${cat?'⚡':'❌'}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:${cat?'#92400E':'#991B1B'};">
+          ${cat?`Giro detectado: <strong>${cat.cat}</strong> → Grupo ${cat.g} (MCC ${cat.mcc})`:'Giro no reconocido — verifica con el catálogo'}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Veredicto
+  html += `<div style="padding:14px 18px;border-radius:var(--rs);background:${aprueba?'linear-gradient(135deg,#065F46,#047857)':'linear-gradient(135deg,#7F1D1D,#991B1B)'};margin-bottom:${tasas&&aprueba?'12px':'0'};">
+    <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;">
+      ${aprueba?'🎉 ¡CALIFICA para tasa natural!':'⚠ No califica para tasa natural'}
+    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,.75);">
+      ${aprueba?`Grupo ${cat.g} · ${cat.cat} · ${anios.toFixed(1)} años de antigüedad`:
+        !cumple2&&!cat?'Falta antigüedad (mín 2 años) y giro válido':
+        !cumple2?`Faltan ${(2-anios).toFixed(1)} años de antigüedad`:
+        'El giro no está en el catálogo de tasas naturales'}
+    </div>
+  </div>`;
+
+  // Tasas aplicables
+  if (aprueba && tasas) {
+    html += `<div style="border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-top:8px;">
+      <div style="padding:8px 14px;background:var(--bg);font-size:11px;font-weight:700;color:${col};text-transform:uppercase;">Tasas aplicables — Grupo ${cat.g} · ${cat.cat}</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:var(--bg);">
+          <th style="padding:7px 12px;font-size:10px;font-weight:700;color:var(--text3);border-bottom:1px solid var(--border);text-align:left;">ESC</th>
+          <th style="padding:7px 12px;font-size:10px;font-weight:700;color:var(--text3);border-bottom:1px solid var(--border);text-align:left;">Rango TPV</th>
+          <th style="padding:7px 12px;font-size:10px;font-weight:700;color:${col};border-bottom:1px solid var(--border);text-align:center;">Nat (TC/TD)</th>
+          <th style="padding:7px 12px;font-size:10px;font-weight:700;color:#E53935;border-bottom:1px solid var(--border);text-align:center;">Non-Nat</th>
+        </tr></thead>
+        <tbody>
+          ${tasas.map(t=>`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:8px 12px;font-weight:600;">${t.e}</td>
+            <td style="padding:8px 12px;">${t.r}</td>
+            <td style="padding:8px 12px;text-align:center;font-weight:700;color:${col};">${pf(t.tc)}</td>
+            <td style="padding:8px 12px;text-align:center;font-weight:700;color:#E53935;">${pf(t.nn)}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function filtrarCatalogo(q) {
+  const list = document.getElementById('catalogo-list');
+  if (!list) return;
+  renderCatalogo(q);
+}
+
+function renderCatalogo(q='') {
+  const list = document.getElementById('catalogo-list');
+  if (!list) return;
+  const qn = norm(q);
+  let html = '';
+  for (const cat of CATALOGO_TASAS) {
+    const colG = cat.g==='A'?'#009EE3':'#FF6E00';
+    const bgG  = cat.g==='A'?'#EFF6FF':'#FFF0E6';
+    const filteredActs = q ? cat.acts.filter(a=>norm(a).includes(qn)) : cat.acts;
+    if (q && filteredActs.length===0) continue;
+    html += `<div style="border-bottom:2px solid var(--border);">
+      <div style="padding:8px 16px;background:${bgG};display:flex;align-items:center;gap:10px;">
+        <span style="font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;background:${colG};color:#fff;">GRUPO ${cat.g}</span>
+        <span style="font-size:13px;font-weight:700;color:${colG};">${cat.cat}</span>
+        <span style="font-size:11px;color:var(--text3);">MCC: ${cat.mcc}</span>
+      </div>
+      ${filteredActs.map(a=>`
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 16px;border-bottom:1px solid var(--border);">
+          <span style="color:${colG};flex-shrink:0;">→</span>
+          <span style="font-size:13px;color:var(--text2);">${a}</span>
+        </div>`).join('')}
+    </div>`;
+  }
+  list.innerHTML = html || '<div style="padding:16px;color:var(--text3);font-size:13px;">Sin resultados para esa búsqueda</div>';
+}
+
+function renderTasas() {
+  // Force hide calc view every time tasas renders
+  const calcEl = document.getElementById('view-calc');
+  if (calcEl) calcEl.style.cssText = 'display:none !important';
+  renderCatalogo();
+}
+
+
+
+// ── Calculadora de Comisiones ──
+const COMPETIDORES = [
+  {
+    id: 'mp', name: 'Mercado Pago', color: '#009EE3', logo: 'MP',
+    tdtc: { nat: { base: 3.5, tiers: [{tpv:30,r:3.2},{tpv:100,r:2.99},{tpv:300,r:2.79},{tpv:500,r:2.49}] }, nonnat: 3.5 },
+    msi: { 3:3.48, 6:5.99, 9:8.99, 12:11.99, 18:16.99, 24:24.99 }
+  },
+  {
+    id: 'clip', name: 'Clip', color: '#FF4B4B', logo: 'Clip',
+    tdtc: { nat: { base: 3.6, tiers: [{tpv:500,r:2.8},{tpv:1000,r:2.6}] }, nonnat: 3.6 },
+    msi: { 3:4.57, 6:7.57, 9:11.07, 12:12.77, 18:19.27, 24:27.17 }
+  },
+  {
+    id: 'netpay', name: 'NetPay', color: '#0066CC', logo: 'NP',
+    tdtc: { nat: { base: 3.5, tiers: [{tpv:25,r:3.2},{tpv:50,r:2.9},{tpv:100,r:2.6}] }, nonnat: 3.5 },
+    msi: { 3:3.5, 6:6.4, 9:9.3, 12:13.2, 18:17, 24:null }
+  },
+  {
+    id: 'getnet', name: 'Getnet', color: '#E87722', logo: 'GN',
+    tdtc: { nat: { base: 2.5, tiers: [] }, nonnat: 2.5 },
+    msi: { 3:3.8, 6:6.5, 9:8.5, 12:11.5, 18:15.0, 24:null }
+  },
+  {
+    id: 'bbva', name: 'BBVA', color: '#004481', logo: 'BB',
+    tdtc: { nat: { base: 2.15, tiers: [] }, nonnat: 2.15 },
+    msi: { 3:4.8, 6:7.8, 9:10.8, 12:13.8, 18:null, 24:null }
+  },
+];
+
+function getTdTcRate(comp, tipo, tpvBand) {
+  const tpvVal = parseInt(tpvBand);
+  if (tipo === 'nonnat') return comp.tdtc.nonnat;
+  const tiers = comp.tdtc.nat.tiers;
+  let rate = comp.tdtc.nat.base;
+  for (const t of tiers) { if (tpvVal >= t.tpv) rate = t.r; }
+  return rate;
+}
+
+function calcComisiones() {
+  const monto  = parseFloat(document.getElementById('c2-monto')?.value) || 0;
+  const tipo   = document.getElementById('c2-tipo')?.value || 'nat';
+  const tpv    = document.getElementById('c2-tpv')?.value || '0';
+  const msi    = parseInt(document.getElementById('c2-msi')?.value || '3');
+  if (monto <= 0) return;
+
+  const fmt = n => `$${n.toLocaleString('es-MX', {minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const pf  = n => `${n.toFixed(2)}%`;
+
+  // ── TD/TC table ──
+  const tdtcRows = COMPETIDORES.map(c => {
+    const rate = getTdTcRate(c, tipo, tpv);
+    const fee  = monto * rate / 100;
+    const net  = monto - fee;
+    return { c, rate, fee, net };
+  }).sort((a,b) => a.fee - b.fee);
+
+  const mpTdtc = tdtcRows.find(r => r.c.id === 'mp');
+
+  let tdtcHtml = `<table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="background:var(--bg);">
+      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Empresa</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Tasa</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Comisión</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Recibes</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">vs MP</th>
+    </tr></thead><tbody>`;
+
+  tdtcRows.forEach((r, i) => {
+    const isMp = r.c.id === 'mp';
+    const diff = r.fee - mpTdtc.fee;
+    const bg   = isMp ? '#FFFBEB' : i === 0 ? '#F0FFF4' : 'var(--surface)';
+    const badge = isMp ? '<span style="background:#FFE600;color:#003087;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;">✓ MP</span>' : '';
+    tdtcHtml += `<tr style="border-bottom:1px solid var(--border);background:${bg};">
+      <td style="padding:10px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:${r.c.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;">${r.c.logo}</div>
+          <span style="font-size:13px;font-weight:${isMp?'700':'500'};">${r.c.name}${badge}</span>
+        </div>
+      </td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${r.c.color};">${pf(r.rate)}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:600;color:#E53935;">${fmt(r.fee)}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#065F46;">${fmt(r.net)}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${diff>0?'#E53935':diff<0?'#065F46':'var(--text3)'};">
+        ${isMp ? '—' : diff > 0 ? `+${fmt(diff)} más caro` : `${fmt(Math.abs(diff))} más barato`}
+      </td>
+    </tr>`;
+  });
+  tdtcHtml += '</tbody></table>';
+  document.getElementById('c2-result-tdtc').innerHTML = tdtcHtml;
+
+  // ── MSI table ──
+  const msiRows = COMPETIDORES.map(c => {
+    const rate = c.msi[msi] ?? null;
+    const fee  = rate !== null ? monto * rate / 100 : null;
+    const net  = fee  !== null ? monto - fee : null;
+    return { c, rate, fee, net };
+  }).sort((a,b) => {
+    if (a.fee === null) return 1;
+    if (b.fee === null) return -1;
+    return a.fee - b.fee;
+  });
+
+  const mpMsi = msiRows.find(r => r.c.id === 'mp');
+
+  let msiHtml = `<table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="background:var(--bg);">
+      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Empresa</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Sobretasa</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Costo total</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Recibes</th>
+      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">vs MP</th>
+    </tr></thead><tbody>`;
+
+  msiRows.forEach((r, i) => {
+    const isMp = r.c.id === 'mp';
+    const avail = r.rate !== null;
+    const diff  = avail && mpMsi.fee !== null ? r.fee - mpMsi.fee : null;
+    const bg    = isMp ? '#FFFBEB' : i === 0 && avail ? '#F0FFF4' : 'var(--surface)';
+    const badge = isMp ? '<span style="background:#FFE600;color:#003087;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;">✓ MP</span>' : '';
+    msiHtml += `<tr style="border-bottom:1px solid var(--border);background:${bg};${!avail?'opacity:.5':''}">
+      <td style="padding:10px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:${r.c.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;">${r.c.logo}</div>
+          <span style="font-size:13px;font-weight:${isMp?'700':'500'};">${r.c.name}${badge}</span>
+        </div>
+      </td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${avail?r.c.color:'var(--text3)'};">${avail?pf(r.rate):'No disponible'}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${avail?'#E53935':'var(--text3)'};">${avail?fmt(r.fee):'—'}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${avail?'#065F46':'var(--text3)'};">${avail?fmt(r.net):'—'}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${diff===null?'var(--text3)':diff>0?'#E53935':'#065F46'};">
+        ${isMp ? '—' : !avail ? 'N/D' : diff > 0 ? `+${fmt(diff)} más caro` : `${fmt(Math.abs(diff))} más barato`}
+      </td>
+    </tr>`;
+  });
+  msiHtml += '</tbody></table>';
+  document.getElementById('c2-result-msi').innerHTML = msiHtml;
+
+  // ── Ahorro summary ──
+  const maxTdtc = Math.max(...tdtcRows.filter(r=>r.c.id!=='mp').map(r=>r.fee));
+  const avgTdtc = tdtcRows.filter(r=>r.c.id!=='mp').reduce((s,r)=>s+r.fee,0) / (tdtcRows.length-1);
+  const savTdtc = avgTdtc - mpTdtc.fee;
+
+  const competitors_msi = msiRows.filter(r=>r.c.id!=='mp'&&r.fee!==null);
+  const avgMsi = competitors_msi.length > 0 ? competitors_msi.reduce((s,r)=>s+r.fee,0)/competitors_msi.length : null;
+  const savMsi = avgMsi !== null && mpMsi.fee !== null ? avgMsi - mpMsi.fee : null;
+
+  document.getElementById('c2-ahorro').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div style="padding:14px 16px;background:linear-gradient(135deg,#003087,#009EE3);border-radius:var(--rs);color:#fff;">
+        <div style="font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro vs promedio competencia</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:6px;">En comisión TD/TC</div>
+        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savTdtc > 0 ? fmt(savTdtc) : 'MP es más caro'}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;">por transacción de ${fmt(monto)}</div>
+      </div>
+      <div style="padding:14px 16px;background:linear-gradient(135deg,#003087,#009EE3);border-radius:var(--rs);color:#fff;">
+        <div style="font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro vs promedio competencia</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:6px;">En MSI a ${msi} meses</div>
+        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savMsi !== null ? (savMsi > 0 ? fmt(savMsi) : 'MP es más caro') : 'N/D'}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;">por transacción de ${fmt(monto)}</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:var(--rs);font-size:12px;color:var(--text2);">
+      💡 <strong>Tip de venta:</strong> En una venta de ${fmt(monto)} a ${msi} meses, el comercio paga 
+      <strong style="color:#009EE3;">${mpMsi.fee !== null ? fmt(mpMsi.fee) : 'N/D'} con MP</strong> vs 
+      ${competitors_msi.length>0 ? `hasta ${fmt(Math.max(...competitors_msi.map(r=>r.fee)))} con la competencia` : 'N/D con otros'}.
+    </div>`;
+}
+
+function renderCalc2() {
+  calcComisiones();
+}
+
+async function boot() {
+  // Show loading overlay
+  document.getElementById('loading-overlay').style.display = 'flex';
+
+  initFirebase();
+
+  // Load from Firebase (or local cache)
+  prospects = await loadDataRemote();
+  nextId = prospects.length > 0 ? Math.max(...prospects.map(p=>p.id)) + 1 : 1;
+
+  // If Firestore was empty, seed it
+  if (prospects.length === 0) {
+    prospects = SEED.map((p,i) => ({...p, id: i+1}));
+    await saveDataTracked(prospects);
+  }
+
+  fixAllNextDates();
+
+  // ── Migrate: assign capturedAt to all prospects that don't have it ──
+  let migrated = 0;
+  prospects.forEach(p => {
+    if (!p.capturedAt && p.last) {
+      p.capturedAt = p.last.split('T')[0] + 'T12:00:00Z';
+      migrated++;
+    }
+  });
+  if (migrated > 0) { saveDataLocal(prospects); console.log(`Migrated capturedAt for ${migrated} prospects`); }
+
+  // ── Load calc data from Firebase ──
+  await loadCalcFromFirebase();
+
+  // Hide loading
+  document.getElementById('loading-overlay').style.display = 'none';
+
+  // Start real-time sync
+  subscribeToChanges();
+
+  // Update status badge
+  const fbSt = document.getElementById('fb-status');
+  if (fbSt) fbSt.textContent = fbReady ? '🟢 Firebase' : '🟡 local';
+
+  setView('dashboard');
+}
+
+boot();
+</script>
+</body>
+</html>
+
+<!-- Mobile bottom navigation -->
+<nav class="mobile-nav" id="mobile-nav">
+  <button class="mob-btn" onclick="setView('dashboard')" id="mob-dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    <span>Dashboard</span>
+  </button>
+  <button class="mob-btn" onclick="setView('prospects')" id="mob-prospects">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    <span>Prospectos</span>
+  </button>
+  <button class="mob-btn" onclick="openModal()" id="mob-add" style="flex:1.2;">
+    <div class="mob-add" style="background:var(--mp-blue);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    </div>
+    <span>Nuevo</span>
+  </button>
+  <button class="mob-btn" onclick="setView('agenda')" id="mob-agenda">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span>Agenda</span>
+  </button>
+  <button class="mob-btn" onclick="setView('calc')" id="mob-calc">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+    <span>Incentivos</span>
+  </button>
+  <button class="mob-btn" onclick="setView('tasas')" id="mob-tasas">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span>Tasas</span>
+  </button>
+  <button class="mob-btn" onclick="setView('calc2')" id="mob-calc2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+    <span>Calc</span>
+  </button>
+</nav>
+
+<!-- Edit/Add modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nuevo prospecto</div>
+      <button class="icon-btn" onclick="closeModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Nombre</label><input class="form-input" type="text" id="f-name" placeholder="Nombre del prospecto"></div>
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-select" id="f-status" onchange="onStatusChange()">
+          <option value="Calificación">Calificación</option><option value="Aceptada">Aceptada</option>
+          <option value="Negociación">Negociación</option><option value="Adquirida">Adquirida</option><option value="Rechazada">Rechazada</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Última atención</label>
+        <input class="form-input" type="datetime-local" id="f-last" oninput="updateNextPreview()">
+        <div class="next-preview" id="next-preview"></div>
+        <div class="form-hint">Próxima atención calculada en días hábiles (Lun–Vie).</div>
+      </div>
+      <div class="form-group"><label class="form-label">Próxima atención <span style="color:var(--text3);font-weight:400;text-transform:none">(ajustar si es necesario)</span></label>
+        <input class="form-input" type="date" id="f-next">
+      </div>
+      <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" id="f-notes" placeholder="Observaciones..."></textarea></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Seller Cust ID</label><input class="form-input" type="text" id="f-custid" placeholder="Ej. 3440951695"></div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Fecha adquisición</label><input class="form-input" type="date" id="f-acqdate"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-delete-btn" onclick="deleteProspect()" style="display:none;margin-right:auto;color:#E53935;border-color:#FECACA;">Eliminar</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProspect()">Guardar</button>
+
