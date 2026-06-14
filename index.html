@@ -270,51 +270,106 @@
   .mob-add svg{width:22px;height:22px;}
 
   @media(max-width:700px){
+    /* Layout */
     .sidebar{display:none;}
     .mobile-nav{display:flex;}
-    .main{padding-bottom:72px;}
-    .content{padding:10px 12px;}
-    .topbar{padding:9px 12px;gap:6px;}
-    .topbar-left{min-width:0;}
-    .topbar-title{font-size:14px;}
-    .topbar-search{flex:1;max-width:none;font-size:13px;padding:7px 10px 7px 30px;}
-    .topbar-search:focus{width:auto;}
+    .main{padding-bottom:68px;width:100%;overflow-x:hidden;}
+    .content{padding:8px 10px;}
+    .app{overflow-x:hidden;}
+
+    /* Topbar */
+    .topbar{padding:8px 10px;gap:6px;overflow-x:hidden;}
+    .topbar-left{min-width:0;flex-shrink:1;}
+    .topbar-title{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;}
+    .topbar-search{flex:1;max-width:none;font-size:13px;padding:7px 10px 7px 30px;min-width:0;}
     .topbar-actions .btn span{display:none;}
-    .topbar-actions .btn{padding:8px 10px;border-radius:50%;width:36px;height:36px;justify-content:center;}
-    .metric-grid{grid-template-columns:repeat(2,1fr);gap:8px;}
-    .metric-card{padding:10px 12px;}
-    .metric-card .m-icon{width:26px;height:26px;margin-bottom:4px;}
-    .m-label{font-size:10px;}
-    .m-value{font-size:20px;}
-    .m-sub{font-size:10px;}
+    .topbar-actions .btn{padding:7px 9px;border-radius:50%;width:34px;height:34px;justify-content:center;flex-shrink:0;}
+
+    /* Metric cards */
+    .metric-grid{grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+    .metric-card{padding:8px 10px;}
+    .m-icon{width:20px;height:20px;}
+    .m-label{font-size:8px;}
+    .m-value{font-size:17px;}
+    .m-sub{font-size:9px;}
+
+    /* Cards */
+    .card-header{padding:10px 12px;font-size:13px;flex-wrap:wrap;gap:4px;}
+    .card-body{padding:10px 12px;}
     .grid-2{grid-template-columns:1fr;gap:10px;}
-    .card-header{padding:11px 13px;font-size:13px;}
-    .card-body{padding:11px 13px;}
+
+    /* Tables → card list */
     .table-wrap table{display:block;}
     .table-wrap table thead{display:none;}
     .table-wrap table tbody{display:block;}
-    .table-wrap table tbody tr{display:flex;flex-wrap:wrap;padding:11px 13px;border-bottom:1px solid var(--border);gap:4px 8px;align-items:center;}
+    .table-wrap table tbody tr{display:flex;flex-wrap:wrap;padding:10px 12px;border-bottom:1px solid var(--border);gap:4px 8px;align-items:center;}
     .table-wrap table tbody tr:last-child{border-bottom:none;}
     .table-wrap table tbody td{display:block;padding:0;border:none;font-size:13px;}
-    .td-name{width:100%;font-size:13px;font-weight:600;margin-bottom:2px;}
+    .td-name{width:100%;font-size:14px;font-weight:600;margin-bottom:2px;}
     .td-date{font-size:11px;color:var(--text3);}
     .table-wrap table tbody td:nth-child(5){display:none;}
     .table-wrap table tbody td:last-child{margin-left:auto;}
+
+    /* Modal slides up from bottom */
     .modal-overlay{align-items:flex-end;}
-    .modal{border-radius:20px 20px 0 0;max-height:92vh;max-width:100%;width:100%;}
-    .filter-chip{padding:5px 10px;font-size:12px;}
+    .modal{border-radius:18px 18px 0 0;max-height:93vh;max-width:100%;width:100%;}
+
+    /* Filter chips */
+    .filter-chip{padding:5px 9px;font-size:12px;}
+
+    /* Tracker */
     .goal-ring-wrap{flex-direction:column;gap:12px;}
     .goal-chips{grid-template-columns:repeat(2,1fr);}
     .annual-grid{grid-template-columns:repeat(3,1fr)!important;}
-    .tracker-tab{font-size:11px;padding:8px 4px;}
+    .tracker-tab{font-size:10px;padding:7px 3px;}
+
+    /* Agenda */
     .agenda-date-lbl{font-size:11px;}
     .agenda-item{padding:9px 0;}
+
+    /* Sidebar stats → hide */
     .sb-stats{display:none;}
+
+    /* Sync badge above bottom nav */
     #sync-badge{bottom:72px;}
-    /* Incentivos mobile */
-    .card-header{flex-wrap:wrap;}
-    /* Topbar compact on mobile */
+
+    /* Tasas Naturales — grid 1 col on mobile */
+    #ts-grupos .card-body > div,
+    #view-tasas .card-body > div[style*="grid-template-columns:1fr 1fr"] {
+      grid-template-columns:1fr !important;
+    }
+
+    /* Calculadora — inputs stack */
+    #view-calc2 .card-body > div[style*="grid-template-columns:1fr 1fr"] {
+      grid-template-columns:1fr !important;
+    }
+
+    /* Incentivos seller cards — period tabs stack */
+    #tpv-list [style*="grid-template-columns:1fr 1fr"] {
+      grid-template-columns:1fr !important;
+    }
+
+    /* Comparativa tables — scroll horizontal */
+    #c2-result-tdtc,#c2-result-msi{overflow-x:auto;}
+    #c2-result-tdtc table,#c2-result-msi table{min-width:480px;}
+
+    /* Card headers with checkbox/select don't overflow */
+    .card-header select{font-size:11px;padding:3px 6px;max-width:120px;}
+    .card-header label{font-size:11px;}
+
+    /* Fast funnel bars grid */
+    #fast-weekly-bars > div{grid-template-columns:repeat(2,1fr)!important;}
+
+    /* Topbar overflow fix */
     .topbar{overflow-x:hidden;}
+  }
+
+  /* Extra small screens */
+  @media(max-width:380px){
+    .metric-grid{grid-template-columns:repeat(2,1fr);}
+    .m-value{font-size:15px;}
+    .topbar-title{max-width:90px;}
+    .mob-btn span{font-size:9px;}
   }
 </style>
 </head>
