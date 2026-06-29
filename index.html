@@ -410,24 +410,6 @@
 
     <nav class="sb-nav">
       <div class="nav-section">Vistas</div>
-      <button class="nav-item active" onclick="setView('dashboard')" id="nav-dashboard">
-        <div class="nav-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        </div>
-        Dashboard
-      </button>
-      <button class="nav-item" onclick="setView('prospects')" id="nav-prospects">
-        <div class="nav-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        Prospectos
-      </button>
-      <button class="nav-item" onclick="setView('agenda')" id="nav-agenda">
-        <div class="nav-icon">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        Agenda
-      </button>
       <button class="nav-item" onclick="setView('calc')" id="nav-calc">
         <div class="nav-icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
@@ -456,108 +438,26 @@
   <div class="main">
     <div class="topbar">
       <div class="topbar-left">
-        <div class="topbar-title" id="topbar-title">Dashboard</div>
-      </div>
-      <input class="topbar-search" type="text" placeholder="Buscar prospecto..." id="global-search" oninput="handleSearch(this.value)">
-      <div class="topbar-actions">
-        <button class="btn btn-primary" onclick="openModal()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Nuevo prospecto
-        </button>
+        <div class="topbar-title" id="topbar-title">Incentivos</div>
       </div>
     </div>
-
     <div class="content">
-
-      <!-- ══ DASHBOARD VIEW ══ -->
-      <div id="view-dashboard" style="display:none">
-        <div class="metric-grid" id="metric-grid"></div>
-
-
-/div>
-
-        <!-- Goal tracker -->
-        <div class="tracker-card">
-          <div class="tracker-header">
-            🎯 Contador de capturas
-            <span style="font-size:12px;font-weight:400;color:var(--text3);">Meta: 40 prospectos/semana · 8 diarios</span>
-          </div>
-          <div class="tracker-tabs">
-            <button class="tracker-tab active" onclick="setTrackerTab('week')" id="ttab-week">Esta semana</button>
-            <button class="tracker-tab" onclick="setTrackerTab('month')" id="ttab-month">Este mes</button>
-            <button class="tracker-tab" onclick="setTrackerTab('year')" id="ttab-year">Historial anual</button>
-          </div>
-          <div class="tracker-body" id="tracker-body"></div>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <div class="card-header">Funnel de ventas</div>
-            <div class="card-body" id="funnel-bars"></div>
-          </div>
-          <div class="card">
-            <div class="card-header">Próximas atenciones</div>
-            <div class="card-body" id="dash-agenda" style="max-height:300px;overflow-y:auto;"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">Últimos registros</div>
-          <div class="card-body" id="recent-list"></div>
-        </div>
-      </div>
-
-      <!-- ══ PROSPECTS VIEW ══ -->
-      <div id="view-prospects" style="display:none">
-        <div class="filter-bar" id="filter-bar"></div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr>
-              <th>Prospecto</th>
-              <th class="sortable" onclick="toggleSort('status')" id="th-status">Status <i class="sort-icon" id="si-status">↕</i></th>
-              <th class="sortable" onclick="toggleSort('last')" id="th-last">Última atención <i class="sort-icon" id="si-last">↕</i></th>
-              <th class="sortable" onclick="toggleSort('next')" id="th-next">Próxima atención <i class="sort-icon" id="si-next">↕</i></th>
-              <th>Notas</th><th></th>
-            </tr></thead>
-            <tbody id="prospects-tbody"></tbody>
-          </table>
-          <div class="empty" id="prospects-empty" style="display:none;">Sin prospectos con estos filtros.</div>
-        </div>
-      </div>
-
-      <!-- ══ AGENDA VIEW ══ -->
-      <div id="view-agenda" style="display:none">
-        <div id="agenda-content"></div>
-      </div>
 
       <!-- ══ INCENTIVOS VIEW ══ -->
       <div id="view-calc" style="display:none">
 
-        <!-- Hero -->
-        <div style="background:linear-gradient(135deg,#4A0E2E 0%,#7B1C4A 40%,#B5860D 100%);border-radius:var(--r);padding:20px 24px;margin-bottom:18px;position:relative;overflow:hidden;">
-          <div style="position:absolute;right:-20px;top:-20px;width:160px;height:160px;border-radius:50%;background:rgba(255,230,0,.05);"></div>
-          <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Mercado Pago · Q2 2026 · Executive RU1 Tipo A</div>
-          <div style="font-size:19px;font-weight:700;color:#fff;margin-bottom:3px;">Calculadora de Incentivos</div>
-          <div style="font-size:12px;color:rgba(255,255,255,.55);">Bono variable 100% = $12,428.57 · Sueldo base $29,000</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
-            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.8);font-weight:600;">Adq M0 20% · Meta 4pts · mín $5k</div>
-            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.8);font-weight:600;">Calidad M1 50% · Meta 2pts (>$60k)</div>
-            <div style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.8);font-weight:600;">TPV M1 30% · Meta $234k</div>
-            <div style="background:rgba(255,230,0,.12);border:1px solid rgba(255,230,0,.2);border-radius:20px;padding:4px 12px;font-size:11px;color:#FFE600;font-weight:600;">Mín 80% para cobrar</div>
-          </div>
-          <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-            <div style="font-size:11px;color:rgba(255,255,255,.5);">Mes a evaluar:</div>
-            <input type="month" id="c-mes" oninput="renderTpvList();calcIncentivos()"
-              style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:600;color:#fff;font-family:'Inter',sans-serif;outline:none;">
-          </div>
+        <!-- Hero Incentivos -->
+        <div id="sec-resultado" class="card-body" style="display:none">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;" id="result-metrics"></div>
+          <div id="result-table" style="overflow-x:auto;margin-bottom:14px;"></div>
+          <div id="result-final"></div>
         </div>
 
-        <!-- 1. RESULTADOS DEL MES -->
+        <!-- 1. Resultado -->
         <div class="card" style="margin-bottom:14px;">
-          <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-resultado','si-resultado')">🏆 1. Resultado del mes<span id="si-resultado" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span></div>
-          <div id="sec-resultado" class="card-body" style="display:none">
-            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;" id="result-metrics"></div>
-            <div style="border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;margin-bottom:14px;" id="result-table"></div>
-            <div id="result-final"></div>
-          </div></div>
+          <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-resultado','si-resultado')">🏆 1. Resultado del mes<span id="si-resultado" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span>
+            <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:8px;" id="tpv-summary"></span>
+          </div>
         </div>
 
         <!-- 2. TPV POR CLIENTE -->
@@ -626,8 +526,10 @@
           </div>
         </div>
 
-      </div>
+      </div><!-- end view-calc -->
 
+    </div><!-- end content -->
+  </div><!-- end main -->
 
 
   <!-- ══ TASAS NATURALES VIEW ══ -->
@@ -760,25 +662,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:10px 14px;font-weight:600;">1</td>
-      <td style="padding:10px 14px;">&lt; $30,000</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">3.50%</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">3.50%</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:10px 14px;font-weight:600;">2</td>
-      <td style="padding:10px 14px;">$30,000 – $100,000</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">2.25%</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td>
-        </tr>
-        <tr style="border-bottom:1px solid var(--border);">
-      <td style="padding:10px 14px;font-weight:600;">3</td>
-      <td style="padding:10px 14px;">&gt; $100,000</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">2.04%</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td>
-        </tr>
-      </tbody>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;font-weight:600;">1</td><td style="padding:10px 14px;">&lt; $30,000</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">3.50%</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">3.50%</td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;font-weight:600;">2</td><td style="padding:10px 14px;">$30,000 – $100,000</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">2.25%</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;font-weight:600;">3</td><td style="padding:10px 14px;">$100,000 – $299,000</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">2.04%</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;font-weight:600;">4</td><td style="padding:10px 14px;">$300,000 – $499,000</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">1.85%</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td></tr>
+                <tr style="border-bottom:1px solid var(--border);"><td style="padding:10px 14px;font-weight:600;">5</td><td style="padding:10px 14px;">&gt; $500,000</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">1.55%</td><td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">2.79%</td></tr>
+</tbody>
     </table>
     <div style="padding:10px 18px 8px;background:#FFF0E6;border-top:2px solid var(--border);border-bottom:1px solid var(--border);">
       <span style="font-size:11px;font-weight:700;color:#FF6E00;text-transform:uppercase;letter-spacing:.06em;">Grupo B · Gasolineras · Colegios/Universidades · Comida Rápida</span>
@@ -846,14 +735,23 @@
 
     <!-- Inputs -->
     <div class="card" style="margin-bottom:14px;">
-      <div class="card-header">💰 Ingresa el monto de la venta</div>
+      <div class="card-header">💰 Configura tu cálculo</div>
       <div class="card-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:end;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Monto de venta ($)</div>
             <input id="c2-monto" class="form-input" type="number" placeholder="Ej. 5000" value="5000"
               oninput="calcComisiones()" style="font-size:18px;font-weight:700;">
           </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Modalidad</div>
+            <select id="c2-modalidad" class="form-select" onchange="calcComisiones()">
+              <option value="point">Point / Terminal</option>
+              <option value="link">Link de Pago</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Tipo de tarjeta</div>
             <select id="c2-tipo" class="form-select" onchange="calcComisiones()">
@@ -861,9 +759,18 @@
               <option value="nonnat">Non-Nat (AMEX, Intl)</option>
             </select>
           </div>
+          <div id="c2-link-row" style="display:none;">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Liquidación Link de Pago</div>
+            <select id="c2-link-liq" class="form-select" onchange="calcComisiones()">
+              <option value="D0">D0 — Inmediata</option>
+              <option value="D7">D+7</option>
+              <option value="D30">D+30</option>
+              <option value="D3">Oxxo/Efectivo (D+3)</option>
+            </select>
+          </div>
         </div>
-        <div style="margin-top:14px;">
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">TPV mensual del comercio (para pricing diferenciado)</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">TPV mensual del comercio</div>
           <select id="c2-tpv" class="form-select" onchange="calcComisiones()">
             <option value="0">Menos de $30,000</option>
             <option value="30">$30,000 – $100,000</option>
@@ -877,7 +784,7 @@
 
     <!-- Comparativa TD/TC -->
     <div class="card" style="margin-bottom:14px;">
-      <div class="card-header">💳 Comparativa — Comisión por transacción (TD/TC)</div>
+      <div class="card-header" id="c2-result-tdtc-label">💳 Comparativa — Comisión por transacción (TD/TC)</div>
       <div class="card-body" style="padding:0;">
         <div id="c2-result-tdtc"></div>
       </div>
@@ -886,14 +793,20 @@
     <!-- Comparativa MSI -->
     <div class="card" style="margin-bottom:14px;">
       <div class="card-header">📅 Comparativa — Meses Sin Intereses (Sobretasa PSJ)
-        <select id="c2-msi" class="form-select" onchange="calcComisiones()" style="font-size:12px;padding:4px 8px;width:auto;margin-left:auto;">
-          <option value="3">3 meses</option>
-          <option value="6">6 meses</option>
-          <option value="9">9 meses</option>
-          <option value="12">12 meses</option>
-          <option value="18">18 meses</option>
-          <option value="24">24 meses</option>
-        </select>
+        <div style="display:flex;gap:6px;margin-left:auto;align-items:center;">
+          <select id="c2-msi-tipo" class="form-select" onchange="calcComisiones()" style="font-size:12px;padding:4px 8px;width:auto;">
+            <option value="especial">Tasa especial ★</option>
+            <option value="normal">Tasa general</option>
+          </select>
+          <select id="c2-msi" class="form-select" onchange="calcComisiones()" style="font-size:12px;padding:4px 8px;width:auto;">
+            <option value="3">3 meses</option>
+            <option value="6">6 meses</option>
+            <option value="9">9 meses</option>
+            <option value="12">12 meses</option>
+            <option value="18">18 meses</option>
+            <option value="24">24 meses</option>
+          </select>
+        </div>
       </div>
       <div class="card-body" style="padding:0;">
         <div id="c2-result-msi"></div>
@@ -908,8 +821,9 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- end view-calc2 -->
 
+</div><!-- end app -->
 
 <div class="toast" id="toast"></div>
 
@@ -1484,11 +1398,11 @@ function setView(v) {
   currentView=v;
   document.querySelectorAll('.nav-item,.nav-status').forEach(el=>el.classList.remove('active'));
   const n=document.getElementById('nav-'+v); if(n)n.classList.add('active');
-  ['dashboard','prospects','agenda','calc','tasas','calc2'].forEach(name=>{
+  ['calc','tasas','calc2'].forEach(name=>{
     const mb=document.getElementById('mob-'+name);
     if(mb) mb.classList.toggle('active', name===v);
   });
-  const titles={dashboard:'Dashboard',prospects:'Prospectos',agenda:'Agenda',calc:'Incentivos',tasas:'Tasas Naturales',calc2:'Calculadora'};
+  const titles={calc:'Incentivos',tasas:'Tasas Naturales',calc2:'Calculadora'};
   document.getElementById('topbar-title').textContent=titles[v]||v;
   // Hide every view, show only target
   ['dashboard','prospects','agenda','calc','tasas'].forEach(name=>{
@@ -1515,12 +1429,12 @@ function setView(v) {
 }
 function openMobFilter(){ document.getElementById('mob-filter-overlay').style.display=''; }
 function closeMobFilter(){ document.getElementById('mob-filter-overlay').style.display='none'; }
-function filterByStatus(s){currentFilter=s;setView('prospects');}
-function handleSearch(q){searchQuery=q.toLowerCase();if(currentView!=='prospects')setView('prospects');else render();}
+function filterByStatus(s){currentFilter=s;}
+function handleSearch(q){searchQuery=q.toLowerCase();}
 
 function render() {
   // Always enforce correct view visibility
-  ['dashboard','prospects','agenda','calc','tasas','calc2'].forEach(name=>{
+  ['calc','tasas','calc2'].forEach(name=>{
     const el=document.getElementById('view-'+name);
     if(el) el.style.cssText = name===currentView ? 'display:block' : 'display:none !important';
   });
@@ -2809,62 +2723,94 @@ function renderTasas() {
 // ── Calculadora de Comisiones ──
 const COMPETIDORES = [
   {
-    id: 'mp', name: 'Mercado Pago', color: '#009EE3', logo: 'MP',
-    tdtc: { nat: { base: 3.5, tiers: [{tpv:30,r:3.2},{tpv:100,r:2.99},{tpv:300,r:2.79},{tpv:500,r:2.49}] }, nonnat: 3.5 },
-    msi: { 3:3.48, 6:5.99, 9:8.99, 12:11.99, 18:16.99, 24:24.99 }
+    id:'mp', name:'Mercado Pago', color:'#009EE3', logo:'MP',
+    tdtc:{
+      nat:{base:3.5, tiers:[{tpv:30,r:3.2},{tpv:100,r:2.99},{tpv:300,r:2.79},{tpv:500,r:2.49}]},
+      nonnat:{base:3.5, tiers:[{tpv:30,r:3.2},{tpv:100,r:2.99},{tpv:300,r:2.79},{tpv:500,r:2.49}]}
+    },
+    msi:{normal:{3:4.69,6:7.69,9:11.19,12:12.89,18:19.39,24:27.29},
+         especial:{3:3.49,6:5.99,9:8.99,12:11.99,18:16.99,24:24.99}},
+    link:{D0:{base:3.49,tiers:[{tpv:30,r:3.20},{tpv:100,r:2.99},{tpv:300,r:2.79},{tpv:500,r:2.49}]},
+          D7:{base:3.20,tiers:[{tpv:30,r:2.99},{tpv:100,r:2.70},{tpv:300,r:2.50},{tpv:500,r:2.30}]},
+          D30:{base:2.95,tiers:[{tpv:30,r:2.70},{tpv:100,r:2.50},{tpv:300,r:2.30},{tpv:500,r:2.10}]},
+          D3:{base:3.79,tiers:[]}, // Oxxo/efectivo fijo
+          linkFee:4}
   },
   {
-    id: 'clip', name: 'Clip', color: '#FF4B4B', logo: 'Clip',
-    tdtc: { nat: { base: 3.6, tiers: [{tpv:500,r:2.8},{tpv:1000,r:2.6}] }, nonnat: 3.6 },
-    msi: { 3:4.57, 6:7.57, 9:11.07, 12:12.77, 18:19.27, 24:27.17 }
+    id:'clip', name:'Clip', color:'#FF4B4B', logo:'Clip',
+    tdtc:{nat:{base:3.6,tiers:[{tpv:500,r:2.8},{tpv:1000,r:2.6}]},nonnat:{base:3.6,tiers:[]}},
+    msi:{normal:{3:4.57,6:7.57,9:11.07,12:12.77,18:19.27,24:27.17},especial:null},
+    link:null
   },
   {
-    id: 'netpay', name: 'NetPay', color: '#0066CC', logo: 'NP',
-    tdtc: { nat: { base: 3.5, tiers: [{tpv:25,r:3.2},{tpv:50,r:2.9},{tpv:100,r:2.6}] }, nonnat: 3.5 },
-    msi: { 3:3.5, 6:6.4, 9:9.3, 12:13.2, 18:17, 24:null }
+    id:'netpay', name:'NetPay', color:'#0066CC', logo:'NP',
+    tdtc:{nat:{base:3.5,tiers:[{tpv:25,r:3.2},{tpv:50,r:2.9},{tpv:100,r:2.6}]},nonnat:{base:3.5,tiers:[]}},
+    msi:{normal:{3:3.5,6:6.4,9:9.3,12:13.2,18:17,24:null},especial:null},
+    link:null
   },
   {
-    id: 'getnet', name: 'Getnet', color: '#E87722', logo: 'GN',
-    tdtc: { nat: { base: 2.5, tiers: [] }, nonnat: 2.5 },
-    msi: { 3:3.8, 6:6.5, 9:8.5, 12:11.5, 18:15.0, 24:null }
+    id:'getnet', name:'Getnet', color:'#E87722', logo:'GN',
+    tdtc:{nat:{base:2.5,tiers:[]},nonnat:{base:2.5,tiers:[]}},
+    msi:{normal:{3:3.8,6:6.5,9:8.5,12:11.5,18:15,24:null},especial:null},
+    link:null
   },
   {
-    id: 'bbva', name: 'BBVA', color: '#004481', logo: 'BB',
-    tdtc: { nat: { base: 2.15, tiers: [] }, nonnat: 2.15 },
-    msi: { 3:4.8, 6:7.8, 9:10.8, 12:13.8, 18:null, 24:null }
+    id:'bbva', name:'BBVA', color:'#004481', logo:'BB',
+    tdtc:{nat:{base:2.15,tiers:[]},nonnat:{base:2.15,tiers:[]}},
+    msi:{normal:{3:4.8,6:7.8,9:10.8,12:13.8,18:null,24:null},especial:null},
+    link:null
   },
 ];
 
 function getTdTcRate(comp, tipo, tpvBand) {
   const tpvVal = parseInt(tpvBand);
-  if (tipo === 'nonnat') return comp.tdtc.nonnat;
-  const tiers = comp.tdtc.nat.tiers;
-  let rate = comp.tdtc.nat.base;
-  for (const t of tiers) { if (tpvVal >= t.tpv) rate = t.r; }
+  const branch = tipo==='nonnat' ? comp.tdtc.nonnat : comp.tdtc.nat;
+  let rate = branch.base;
+  for(const t of branch.tiers){ if(tpvVal>=t.tpv) rate=t.r; }
   return rate;
 }
 
+function getLinkRate(comp, liquidacion, tpvBand) {
+  if(!comp.link) return null;
+  const tpvVal = parseInt(tpvBand);
+  const branch = comp.link[liquidacion];
+  if(!branch) return null;
+  let rate = branch.base;
+  for(const t of branch.tiers){ if(tpvVal>=t.tpv) rate=t.r; }
+  return rate;
+}
+
+
 function calcComisiones() {
-  const monto  = parseFloat(document.getElementById('c2-monto')?.value) || 0;
-  const tipo   = document.getElementById('c2-tipo')?.value || 'nat';
-  const tpv    = document.getElementById('c2-tpv')?.value || '0';
-  const msi    = parseInt(document.getElementById('c2-msi')?.value || '3');
-  if (monto <= 0) return;
+  const monto      = parseFloat(document.getElementById('c2-monto')?.value)||0;
+  const tipo       = document.getElementById('c2-tipo')?.value||'nat';
+  const tpv        = document.getElementById('c2-tpv')?.value||'0';
+  const msi        = parseInt(document.getElementById('c2-msi')?.value||'3');
+  const msiTipo    = document.getElementById('c2-msi-tipo')?.value||'especial';
+  const modalidad  = document.getElementById('c2-modalidad')?.value||'point';
+  const linkLiq    = document.getElementById('c2-link-liq')?.value||'D0';
+  if(monto<=0) return;
 
-  const fmt = n => `$${n.toLocaleString('es-MX', {minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const pf  = n => `${n.toFixed(2)}%`;
+  const fmt = n=>`$${n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const pf  = n=>`${n.toFixed(2)}%`;
+  const ROW = (c,label,rate,fee,net,diffVsMP,isMp,na=false)=>{
+    const bg = isMp?'#FFFBEB':na?'var(--bg)':'var(--surface)';
+    const badge = isMp?'<span style="background:#FFE600;color:#003087;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;">✓ MP</span>':'';
+    return `<tr style="border-bottom:1px solid var(--border);background:${bg};${na?'opacity:.5':''}">
+      <td style="padding:10px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:28px;height:28px;border-radius:6px;background:${c.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;">${c.logo}</div>
+          <span style="font-size:13px;font-weight:${isMp?700:500};">${c.name}${badge}${label}</span>
+        </div>
+      </td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${na?'var(--text3)':c.color};">${na?'N/D':pf(rate)}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${na?'var(--text3)':'#E53935'};">${na?'—':fmt(fee)}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${na?'var(--text3)':'#065F46'};">${na?'—':fmt(net)}</td>
+      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${diffVsMP===null?'var(--text3)':diffVsMP>0?'#E53935':'#00A650'};">${isMp?'—':na?'N/D':diffVsMP>0?`+${fmt(diffVsMP)} más caro`:`${fmt(Math.abs(diffVsMP))} más barato`}</td>
+    </tr>`;
+  };
 
-  // ── TD/TC table ──
-  const tdtcRows = COMPETIDORES.map(c => {
-    const rate = getTdTcRate(c, tipo, tpv);
-    const fee  = monto * rate / 100;
-    const net  = monto - fee;
-    return { c, rate, fee, net };
-  }).sort((a,b) => a.fee - b.fee);
-
-  const mpTdtc = tdtcRows.find(r => r.c.id === 'mp');
-
-  let tdtcHtml = `<table style="width:100%;border-collapse:collapse;">
+  const THEAD = (title)=>`<table style="width:100%;border-collapse:collapse;">
     <thead><tr style="background:var(--bg);">
       <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Empresa</th>
       <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Tasa</th>
@@ -2873,106 +2819,113 @@ function calcComisiones() {
       <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">vs MP</th>
     </tr></thead><tbody>`;
 
-  tdtcRows.forEach((r, i) => {
-    const isMp = r.c.id === 'mp';
-    const diff = r.fee - mpTdtc.fee;
-    const bg   = isMp ? '#FFFBEB' : i === 0 ? '#F0FFF4' : 'var(--surface)';
-    const badge = isMp ? '<span style="background:#FFE600;color:#003087;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;">✓ MP</span>' : '';
-    tdtcHtml += `<tr style="border-bottom:1px solid var(--border);background:${bg};">
-      <td style="padding:10px 14px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:28px;height:28px;border-radius:6px;background:${r.c.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;">${r.c.logo}</div>
-          <span style="font-size:13px;font-weight:${isMp?'700':'500'};">${r.c.name}${badge}</span>
-        </div>
-      </td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${r.c.color};">${pf(r.rate)}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:600;color:#E53935;">${fmt(r.fee)}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:#065F46;">${fmt(r.net)}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${diff>0?'#E53935':diff<0?'#065F46':'var(--text3)'};">
-        ${isMp ? '—' : diff > 0 ? `+${fmt(diff)} más caro` : `${fmt(Math.abs(diff))} más barato`}
-      </td>
-    </tr>`;
+  // ── Toggle Link liquidacion selector ──
+  const linkRow = document.getElementById('c2-link-row');
+  if(linkRow) linkRow.style.display = modalidad==='link'?'':'none';
+
+  // ── Comisión TD/TC o Link de Pago ──
+  let tdtcRows;
+  if(modalidad==='link'){
+    tdtcRows = COMPETIDORES.map(c=>{
+      const rate = getLinkRate(c,'D0',tpv); // only MP has link
+      const fee  = rate!==null ? monto*rate/100 + (c.link?.linkFee||0) : null;
+      const net  = fee!==null  ? monto-fee : null;
+      return {c, rate, fee, net};
+    }).sort((a,b)=>{
+      if(a.fee===null) return 1; if(b.fee===null) return -1; return a.fee-b.fee;
+    });
+    // For link, show all 4 liquidation options for MP
+    const mp = COMPETIDORES[0];
+    const linkTypes = [
+      {key:'D0',label:' · Liberación inmediata (D0)'},
+      {key:'D7',label:' · Liberación D+7'},
+      {key:'D30',label:' · Liberación D+30'},
+      {key:'D3',label:' · Oxxo/Efectivo (D+3)'},
+    ];
+    let linkHtml = THEAD('Link de Pago');
+    let mpD0fee = null;
+    linkTypes.forEach((lt,i)=>{
+      const rate = getLinkRate(mp, lt.key, tpv);
+      if(rate===null) return;
+      const fee  = monto*rate/100 + (mp.link.linkFee||0);
+      const net  = monto-fee;
+      if(i===0) mpD0fee=fee;
+      const diff = i===0?null:fee-mpD0fee;
+      linkHtml += ROW(mp, lt.label, rate, fee, net, i===0?null:diff, i===0);
+    });
+    linkHtml += '</tbody></table>';
+    document.getElementById('c2-result-tdtc').innerHTML = linkHtml;
+    document.getElementById('c2-result-tdtc-label').textContent = '🔗 Link de Pago — Opciones de liquidación';
+  } else {
+    // Point / Terminal
+    tdtcRows = COMPETIDORES.map(c=>{
+      const rate=getTdTcRate(c,tipo,tpv);
+      const fee=monto*rate/100;
+      return {c,rate,fee,net:monto-fee};
+    }).sort((a,b)=>a.fee-b.fee);
+    const mpRow=tdtcRows.find(r=>r.c.id==='mp');
+    let html=THEAD('TD/TC');
+    tdtcRows.forEach(r=>{
+      html+=ROW(r.c,'',r.rate,r.fee,r.net,r.c.id==='mp'?null:r.fee-mpRow.fee,r.c.id==='mp');
+    });
+    html+='</tbody></table>';
+    document.getElementById('c2-result-tdtc').innerHTML=html;
+    document.getElementById('c2-result-tdtc-label').textContent='💳 Comparativa — Comisión por transacción (TD/TC)';
+  }
+
+  // ── MSI ──
+  const msiRows = COMPETIDORES.map(c=>{
+    const table = msiTipo==='especial'&&c.msi.especial ? c.msi.especial : c.msi.normal;
+    const rate  = table ? (table[msi]??null) : null;
+    const fee   = rate!==null ? monto*rate/100 : null;
+    return {c, rate, fee, net:fee!==null?monto-fee:null};
+  }).sort((a,b)=>{
+    if(a.fee===null) return 1; if(b.fee===null) return -1; return a.fee-b.fee;
   });
-  tdtcHtml += '</tbody></table>';
-  document.getElementById('c2-result-tdtc').innerHTML = tdtcHtml;
-
-  // ── MSI table ──
-  const msiRows = COMPETIDORES.map(c => {
-    const rate = c.msi[msi] ?? null;
-    const fee  = rate !== null ? monto * rate / 100 : null;
-    const net  = fee  !== null ? monto - fee : null;
-    return { c, rate, fee, net };
-  }).sort((a,b) => {
-    if (a.fee === null) return 1;
-    if (b.fee === null) return -1;
-    return a.fee - b.fee;
+  const mpMsi = msiRows.find(r=>r.c.id==='mp');
+  let msiHtml = THEAD('MSI');
+  msiRows.forEach(r=>{
+    const na=r.rate===null;
+    msiHtml+=ROW(r.c,'',r.rate??0,r.fee??0,r.net??0,
+      r.c.id==='mp'||na?null:r.fee-mpMsi.fee, r.c.id==='mp', na);
   });
-
-  const mpMsi = msiRows.find(r => r.c.id === 'mp');
-
-  let msiHtml = `<table style="width:100%;border-collapse:collapse;">
-    <thead><tr style="background:var(--bg);">
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Empresa</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Sobretasa</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Costo total</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Recibes</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">vs MP</th>
-    </tr></thead><tbody>`;
-
-  msiRows.forEach((r, i) => {
-    const isMp = r.c.id === 'mp';
-    const avail = r.rate !== null;
-    const diff  = avail && mpMsi.fee !== null ? r.fee - mpMsi.fee : null;
-    const bg    = isMp ? '#FFFBEB' : i === 0 && avail ? '#F0FFF4' : 'var(--surface)';
-    const badge = isMp ? '<span style="background:#FFE600;color:#003087;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;">✓ MP</span>' : '';
-    msiHtml += `<tr style="border-bottom:1px solid var(--border);background:${bg};${!avail?'opacity:.5':''}">
-      <td style="padding:10px 14px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:28px;height:28px;border-radius:6px;background:${r.c.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;flex-shrink:0;">${r.c.logo}</div>
-          <span style="font-size:13px;font-weight:${isMp?'700':'500'};">${r.c.name}${badge}</span>
-        </div>
-      </td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${avail?r.c.color:'var(--text3)'};">${avail?pf(r.rate):'No disponible'}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${avail?'#E53935':'var(--text3)'};">${avail?fmt(r.fee):'—'}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${avail?'#065F46':'var(--text3)'};">${avail?fmt(r.net):'—'}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${diff===null?'var(--text3)':diff>0?'#E53935':'#065F46'};">
-        ${isMp ? '—' : !avail ? 'N/D' : diff > 0 ? `+${fmt(diff)} más caro` : `${fmt(Math.abs(diff))} más barato`}
-      </td>
-    </tr>`;
-  });
-  msiHtml += '</tbody></table>';
-  document.getElementById('c2-result-msi').innerHTML = msiHtml;
+  msiHtml+='</tbody></table>';
+  document.getElementById('c2-result-msi').innerHTML=msiHtml;
 
   // ── Ahorro summary ──
-  const maxTdtc = Math.max(...tdtcRows.filter(r=>r.c.id!=='mp').map(r=>r.fee));
-  const avgTdtc = tdtcRows.filter(r=>r.c.id!=='mp').reduce((s,r)=>s+r.fee,0) / (tdtcRows.length-1);
-  const savTdtc = avgTdtc - mpTdtc.fee;
+  const mpTdtc  = tdtcRows?.find?.(r=>r.c.id==='mp');
+  const competitors_tdtc = tdtcRows?.filter?.(r=>r.c.id!=='mp'&&r.fee!=null)||[];
+  const avgTdtc = competitors_tdtc.length?competitors_tdtc.reduce((s,r)=>s+r.fee,0)/competitors_tdtc.length:null;
+  const savTdtc = avgTdtc&&mpTdtc?.fee!=null?avgTdtc-mpTdtc.fee:null;
 
-  const competitors_msi = msiRows.filter(r=>r.c.id!=='mp'&&r.fee!==null);
-  const avgMsi = competitors_msi.length > 0 ? competitors_msi.reduce((s,r)=>s+r.fee,0)/competitors_msi.length : null;
-  const savMsi = avgMsi !== null && mpMsi.fee !== null ? avgMsi - mpMsi.fee : null;
+  const competitors_msi = msiRows.filter(r=>r.c.id!=='mp'&&r.fee!=null);
+  const avgMsi = competitors_msi.length?competitors_msi.reduce((s,r)=>s+r.fee,0)/competitors_msi.length:null;
+  const savMsi = avgMsi&&mpMsi?.fee!=null?avgMsi-mpMsi.fee:null;
 
-  document.getElementById('c2-ahorro').innerHTML = `
+  const savEl=document.getElementById('c2-ahorro');
+  if(savEl) savEl.innerHTML=`
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
       <div style="padding:14px 16px;background:linear-gradient(135deg,#003087,#009EE3);border-radius:var(--rs);color:#fff;">
-        <div style="font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro vs promedio competencia</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:6px;">En comisión TD/TC</div>
-        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savTdtc > 0 ? fmt(savTdtc) : 'MP es más caro'}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;">por transacción de ${fmt(monto)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro promedio vs competencia</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;">${modalidad==='link'?'Link de Pago':'TD/TC'}</div>
+        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savTdtc!=null?(savTdtc>0?fmt(savTdtc):'MP es más caro'):'—'}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">por transacción de ${fmt(monto)}</div>
       </div>
       <div style="padding:14px 16px;background:linear-gradient(135deg,#003087,#009EE3);border-radius:var(--rs);color:#fff;">
-        <div style="font-size:11px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro vs promedio competencia</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-bottom:6px;">En MSI a ${msi} meses</div>
-        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savMsi !== null ? (savMsi > 0 ? fmt(savMsi) : 'MP es más caro') : 'N/D'}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px;">por transacción de ${fmt(monto)}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro promedio vs competencia</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;">MSI ${msi} meses (${msiTipo})</div>
+        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savMsi!=null?(savMsi>0?fmt(savMsi):'MP es más caro'):'—'}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">por transacción de ${fmt(monto)}</div>
       </div>
     </div>
     <div style="margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:var(--rs);font-size:12px;color:var(--text2);">
-      💡 <strong>Tip de venta:</strong> En una venta de ${fmt(monto)} a ${msi} meses, el comercio paga 
-      <strong style="color:#009EE3;">${mpMsi.fee !== null ? fmt(mpMsi.fee) : 'N/D'} con MP</strong> vs 
-      ${competitors_msi.length>0 ? `hasta ${fmt(Math.max(...competitors_msi.map(r=>r.fee)))} con la competencia` : 'N/D con otros'}.
+      💡 <strong>Tip:</strong> Con ${fmt(monto)} a ${msi} meses, el comercio paga
+      <strong style="color:#009EE3;">${mpMsi?.fee!=null?fmt(mpMsi.fee):'N/D'} con MP</strong>
+      ${competitors_msi.length?`vs hasta ${fmt(Math.max(...competitors_msi.map(r=>r.fee)))} con la competencia`:''}.
+      ${msiTipo==='especial'?'<span style="color:#00A650;font-weight:600;">✓ Tasa especial aplicada</span>':''}
     </div>`;
 }
+
 
 function renderCalc2() {
   calcComisiones();
@@ -3019,33 +2972,27 @@ async function boot() {
   const fbSt = document.getElementById('fb-status');
   if (fbSt) fbSt.textContent = fbReady ? '🟢 Firebase' : '🟡 local';
 
-  setView('dashboard');
+  setView('calc');
 }
 
 boot();
 </script>
+
+</div><!-- end modal-footer -->
+</div><!-- end modal -->
+</div><!-- end modal-overlay -->
+</div><!-- end app -->
+
 </body>
 </html>
 
 <!-- Mobile bottom navigation -->
 <nav class="mobile-nav" id="mobile-nav">
-  <button class="mob-btn" onclick="setView('dashboard')" id="mob-dashboard">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-    <span>Dashboard</span>
-  </button>
-  <button class="mob-btn" onclick="setView('prospects')" id="mob-prospects">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-    <span>Prospectos</span>
-  </button>
   <button class="mob-btn" onclick="openModal()" id="mob-add" style="flex:1.2;">
     <div class="mob-add" style="background:var(--mp-blue);">
       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </div>
     <span>Nuevo</span>
-  </button>
-  <button class="mob-btn" onclick="setView('agenda')" id="mob-agenda">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    <span>Agenda</span>
   </button>
   <button class="mob-btn" onclick="setView('calc')" id="mob-calc">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
