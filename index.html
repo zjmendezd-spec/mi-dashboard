@@ -440,23 +440,120 @@
       <div class="topbar-left">
         <div class="topbar-title" id="topbar-title">Incentivos</div>
       </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);white-space:nowrap;">Mes de evaluación:</div>
+        <input type="month" id="c-mes"
+          style="border:1.5px solid var(--border);border-radius:var(--rs);padding:6px 10px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--text);background:var(--surface);cursor:pointer;outline:none;"
+          onchange="renderCalc()">
+      </div>
     </div>
     <div class="content">
 
       <!-- ══ INCENTIVOS VIEW ══ -->
       <div id="view-calc" style="display:none">
 
-        <!-- Hero Incentivos -->
-        <div id="sec-resultado" class="card-body" style="display:none">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;" id="result-metrics"></div>
-          <div id="result-table" style="overflow-x:auto;margin-bottom:14px;"></div>
-          <div id="result-final"></div>
-        </div>
-
         <!-- 1. Resultado -->
         <div class="card" style="margin-bottom:14px;">
           <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-resultado','si-resultado')">🏆 1. Resultado del mes<span id="si-resultado" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span>
-            <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:8px;" id="tpv-summary"></span>
+            <div style="display:flex;align-items:center;gap:6px;margin-left:10px;" onclick="event.stopPropagation()">
+              <span style="font-size:11px;color:var(--text3);">TPV:</span>
+              <select id="tpv-mode" onchange="updateTpvSummary();calcIncentivos()"
+                style="font-size:11px;padding:3px 6px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-family:'Inter',sans-serif;cursor:pointer;">
+                <option value="m0m1">M0 + M1</option>
+                <option value="m1only">Solo M1</option>
+                <option value="m0only">Solo M0</option>
+              </select>
+            </div>
+          </div>
+          <div id="sec-resultado" class="card-body" style="display:none">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;" id="result-metrics"></div>
+            <div id="result-table" style="overflow-x:auto;margin-bottom:14px;"></div>
+            <div id="result-final"></div>
+          </div>
+        </div>
+
+        <!-- SIMULADOR DE INCENTIVOS -->
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-header" style="cursor:pointer;" onclick="toggleSection('sec-sim','si-sim')">
+            🎯 Simulador de incentivos
+            <span id="si-sim" style="font-size:13px;color:var(--text3);margin-left:auto;">▶</span>
+          </div>
+          <div id="sec-sim" class="card-body" style="display:none">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6;">
+              Edita las metas de cualquier mes de ramp-up y simula tu ingreso estimado con diferentes escenarios de cumplimiento.
+            </div>
+
+            <!-- Tabla de comisiones referencia rápida -->
+            <details style="margin-bottom:14px;">
+              <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#003087;padding:6px 0;list-style:none;display:flex;align-items:center;gap:6px;">
+                📋 Ver tabla de comisiones completa
+              </summary>
+              <div style="overflow-x:auto;margin-top:8px;border-radius:var(--rs);border:1px solid var(--border);">
+                <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                  <thead><tr style="background:#003087;color:#FFE600;">
+                    <th style="padding:6px 10px;text-align:center;">Performance</th>
+                    <th style="padding:6px 10px;text-align:center;">% de Pago</th>
+                    <th style="padding:6px 10px;text-align:center;">Performance</th>
+                    <th style="padding:6px 10px;text-align:center;">% de Pago</th>
+                    <th style="padding:6px 10px;text-align:center;">Performance</th>
+                    <th style="padding:6px 10px;text-align:center;">% de Pago</th>
+                  </tr></thead>
+                  <tbody id="tabla-comisiones-ref"></tbody>
+                </table>
+              </div>
+            </details>
+
+            <!-- Ramp-up targets editable table -->
+            <div style="overflow-x:auto;margin-bottom:16px;">
+              <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                  <tr style="background:#003087;color:#fff;">
+                    <th style="padding:9px 12px;text-align:left;font-weight:700;">Mes</th>
+                    <th style="padding:9px 12px;text-align:center;font-weight:700;">Sellers adq.</th>
+                    <th style="padding:9px 12px;text-align:center;font-weight:700;">Pts calidad</th>
+                    <th style="padding:9px 12px;text-align:center;font-weight:700;">TPV meta ($)</th>
+                    <th style="padding:9px 12px;text-align:center;font-weight:700;">Bono 100%</th>
+                  </tr>
+                </thead>
+                <tbody id="sim-ramp-table"></tbody>
+              </table>
+            </div>
+
+            <!-- Simulation inputs -->
+            <div style="background:var(--bg);border-radius:var(--rs);padding:14px;margin-bottom:14px;">
+              <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Simula tu resultado</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">
+                <div>
+                  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px;">Mes a simular</div>
+                  <select id="sim-mes" class="form-select" onchange="runSimulator()">
+                    <option value="2026-05">M0 — Mayo 2026</option>
+                    <option value="2026-06">M1 — Junio 2026</option>
+                    <option value="2026-07">M2 — Julio 2026</option>
+                    <option value="2026-08">M3 — Agosto 2026</option>
+                    <option value="2026-09">M4 — Sep 2026</option>
+                  </select>
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px;">Sellers adquiridos</div>
+                  <input id="sim-adq" class="form-input" type="number" value="4" min="0" max="20" oninput="runSimulator()">
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px;">Pts calidad logrados</div>
+                  <input id="sim-cal" class="form-input" type="number" value="2" min="0" max="20" step="0.5" oninput="runSimulator()">
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px;">TPV M1 logrado ($)</div>
+                  <input id="sim-tpv" class="form-input" type="number" value="150000" min="0" oninput="runSimulator()">
+                </div>
+                <div>
+                  <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:4px;">Extras / FAST (%)</div>
+                  <input id="sim-extras" class="form-input" type="number" value="0" min="-10" max="20" step="0.5" oninput="runSimulator()">
+                </div>
+              </div>
+            </div>
+
+            <!-- Simulation result -->
+            <div id="sim-result"></div>
           </div>
         </div>
 
@@ -725,104 +822,107 @@
   <!-- ══ CALCULADORA VIEW ══ -->
   <div id="view-calc2" style="display:none">
 
-    <!-- Hero -->
-    <div style="background:linear-gradient(135deg,#003087 0%,#009EE3 100%);border-radius:var(--r);padding:20px 24px;margin-bottom:18px;position:relative;overflow:hidden;">
-      <div style="position:absolute;right:-20px;top:-20px;width:160px;height:160px;border-radius:50%;background:rgba(255,230,0,.08);"></div>
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;">Mercado Pago vs Competencia</div>
-      <div style="font-size:20px;font-weight:800;color:#FFE600;margin-bottom:3px;">Calculadora de Comisiones</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.7);">Compara comisiones por transacción y meses sin intereses</div>
-    </div>
-
-    <!-- Inputs -->
+    <!-- Inputs compactos -->
     <div class="card" style="margin-bottom:14px;">
-      <div class="card-header">💰 Configura tu cálculo</div>
-      <div class="card-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+      <div class="card-header" style="padding:10px 14px;font-size:13px;">⚙️ Configura tu cálculo</div>
+      <div style="padding:10px 14px;">
+
+        <!-- Row 1: monto + medio + forma -->
+        <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:8px;align-items:end;margin-bottom:8px;">
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Monto de venta ($)</div>
-            <input id="c2-monto" class="form-input" type="number" placeholder="Ej. 5000" value="5000"
-              oninput="calcComisiones()" style="font-size:18px;font-weight:700;">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Monto ($)</div>
+            <input id="c2-monto" class="form-input" type="number" value="5000" oninput="calcComisiones()"
+              style="font-size:15px;font-weight:700;width:130px;padding:6px 10px;">
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Modalidad</div>
-            <select id="c2-modalidad" class="form-select" onchange="calcComisiones()">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Medio de cobro</div>
+            <select id="c2-modalidad" class="form-select" onchange="calcComisiones()" style="padding:6px 8px;font-size:13px;">
               <option value="point">Point / Terminal</option>
+              <option value="tap">Tap</option>
+              <option value="checkout">Checkout</option>
               <option value="link">Link de Pago</option>
             </select>
           </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Tipo de tarjeta</div>
-            <select id="c2-tipo" class="form-select" onchange="calcComisiones()">
-              <option value="nat">TD/TC Nacional (Nat)</option>
-              <option value="nonnat">Non-Nat (AMEX, Intl)</option>
-            </select>
-          </div>
-          <div id="c2-link-row" style="display:none;">
-            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">Liquidación Link de Pago</div>
-            <select id="c2-link-liq" class="form-select" onchange="calcComisiones()">
-              <option value="D0">D0 — Inmediata</option>
-              <option value="D7">D+7</option>
-              <option value="D30">D+30</option>
-              <option value="D3">Oxxo/Efectivo (D+3)</option>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Forma de pago</div>
+            <select id="c2-forma" class="form-select" onchange="calcComisiones()" style="padding:6px 8px;font-size:13px;">
+              <option value="tc">Tarjeta de crédito</option>
+              <option value="td">Tarjeta de débito</option>
             </select>
           </div>
         </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:5px;">TPV mensual del comercio</div>
-          <select id="c2-tpv" class="form-select" onchange="calcComisiones()">
-            <option value="0">Menos de $30,000</option>
-            <option value="30">$30,000 – $100,000</option>
-            <option value="100">$100,000 – $300,000</option>
-            <option value="300">$300,000 – $500,000</option>
-            <option value="500">Más de $500,000</option>
-          </select>
+
+        <!-- Row 2: plazo + TPV -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px;">Plazo de liberación</div>
+            <select id="c2-plazo" class="form-select" onchange="calcComisiones()" style="padding:6px 8px;font-size:13px;">
+              <option value="instante">Al instante</option>
+            </select>
+          </div>
+          <div id="c2-tpv-row">
+            <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;margin-bottom:3px;">TPV mensual</div>
+            <select id="c2-tpv-band" class="form-select" onchange="calcComisiones()" style="padding:6px 8px;font-size:13px;">
+              <option value="0">&lt; $30,000</option>
+              <option value="30">$30K – $100K</option>
+              <option value="100">$100K – $299K</option>
+              <option value="300">$300K – $499K</option>
+              <option value="500">&gt; $500K</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 3: MSI inline -->
+        <div id="c2-msi-section" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border);">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap;">
+            <input type="checkbox" id="c2-use-msi" onchange="calcComisiones()"
+              style="width:16px;height:16px;cursor:pointer;accent-color:#003087;">
+            Incluir MSI
+          </label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <select id="c2-msi" class="form-select" onchange="calcComisiones()" style="padding:5px 8px;font-size:12px;width:auto;">
+              <option value="3">3 meses</option>
+              <option value="6">6 meses</option>
+              <option value="9">9 meses</option>
+              <option value="12">12 meses</option>
+              <option value="18">18 meses</option>
+              <option value="24">24 meses</option>
+            </select>
+            <select id="c2-msi-tipo" class="form-select" onchange="calcComisiones()" style="padding:5px 8px;font-size:12px;width:auto;">
+              <option value="especial">★ Especial</option>
+              <option value="general">General</option>
+            </select>
+          </div>
+          <span style="font-size:10px;color:var(--text3);">El cliente paga sin intereses, tú asumes la sobretasa</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MP Results (tables + simulation at bottom) -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-header" style="padding:10px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:24px;height:24px;border-radius:5px;background:#009EE3;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;">MP</div>
+          Mercado Pago
         </div>
       </div>
-    </div>
-
-    <!-- Comparativa TD/TC -->
-    <div class="card" style="margin-bottom:14px;">
-      <div class="card-header" id="c2-result-tdtc-label">💳 Comparativa — Comisión por transacción (TD/TC)</div>
-      <div class="card-body" style="padding:0;">
-        <div id="c2-result-tdtc"></div>
-      </div>
-    </div>
-
-    <!-- Comparativa MSI -->
-    <div class="card" style="margin-bottom:14px;">
-      <div class="card-header">📅 Comparativa — Meses Sin Intereses (Sobretasa PSJ)
-        <div style="display:flex;gap:6px;margin-left:auto;align-items:center;">
-          <select id="c2-msi-tipo" class="form-select" onchange="calcComisiones()" style="font-size:12px;padding:4px 8px;width:auto;">
-            <option value="especial">Tasa especial ★</option>
-            <option value="normal">Tasa general</option>
-          </select>
-          <select id="c2-msi" class="form-select" onchange="calcComisiones()" style="font-size:12px;padding:4px 8px;width:auto;">
-            <option value="3">3 meses</option>
-            <option value="6">6 meses</option>
-            <option value="9">9 meses</option>
-            <option value="12">12 meses</option>
-            <option value="18">18 meses</option>
-            <option value="24">24 meses</option>
-          </select>
-        </div>
-      </div>
-      <div class="card-body" style="padding:0;">
-        <div id="c2-result-msi"></div>
-      </div>
-    </div>
-
-    <!-- Resumen -->
-    <div class="card" style="margin-bottom:16px;">
-      <div class="card-header">🏆 ¿Cuánto ahorra el comercio con Mercado Pago?</div>
       <div class="card-body">
-        <div id="c2-ahorro"></div>
+        <div id="c2-result-mp"></div>
+        <!-- Simulation summary pinned at bottom (point 3) -->
+        <div id="c2-sim-summary"></div>
       </div>
     </div>
 
-  </div><!-- end view-calc2 -->
+    <!-- Competencia -->
+    <div class="card" id="c2-comp-card" style="margin-bottom:16px;">
+      <div class="card-header">🏢 Competencia</div>
+      <div style="overflow-x:auto;padding:4px;">
+        <div id="c2-result-comp"></div>
+      </div>
+    </div>
 
+  </div>
 </div><!-- end app -->
 
 <div class="toast" id="toast"></div>
@@ -1679,11 +1779,41 @@ function getMetaCal(evalMonth)  { return getTargetsForMonth(evalMonth).calidad; 
 function getMetaTpv(evalMonth)  { return getTargetsForMonth(evalMonth).tpvMeta; }
 
 // ── Pago table ──
+// ── Tabla de comisiones exacta ──
+const TABLA_PAGO = {
+  79:0.0, 80:50.0, 81:52.5, 82:55.0, 83:57.5, 84:60.0, 85:62.5, 86:65.0,
+  87:67.5, 88:70.0, 89:72.5, 90:75.0, 91:77.5, 92:80.0, 93:82.5, 94:85.0,
+  95:87.5, 96:90.0, 97:92.5, 98:95.0, 99:97.5, 100:100.0,
+  101:101.3, 102:102.7, 103:104.0, 104:105.3, 105:106.7, 106:108.0,
+  107:109.3, 108:110.7, 109:112.0, 110:113.3, 111:114.7, 112:116.0,
+  113:117.3, 114:118.7, 115:120.0, 116:121.3, 117:122.7, 118:124.0,
+  119:125.3, 120:126.7, 121:128.0, 122:129.3, 123:130.7, 124:132.0,
+  125:133.3, 126:134.7, 127:136.0, 128:137.3, 129:138.7, 130:140.0,
+  131:141.3, 132:142.7, 133:144.0, 134:145.3, 135:146.7, 136:148.0,
+  137:149.3, 138:150.7, 139:152.0, 140:153.3, 141:154.7, 142:156.0,
+  143:157.3, 144:158.7, 145:160.0, 146:161.3, 147:162.7, 148:164.0,
+  149:165.3, 150:166.7, 151:168.0, 152:170.7, 153:172.7, 154:174.7,
+  155:176.7, 156:178.7, 157:180.7, 158:182.7, 159:184.7, 160:186.7,
+  161:188.7, 162:190.7, 163:192.7, 164:194.7, 165:196.7, 166:198.7,
+  167:200.7, 168:202.7, 169:204.7, 170:206.7, 171:208.7, 172:210.7,
+  173:212.7, 174:214.7, 175:216.7, 176:218.7, 177:220.7, 178:222.7,
+  179:224.7, 180:226.7, 181:228.7, 182:230.7, 183:232.7, 184:234.7,
+  185:236.7, 186:238.7, 187:240.7, 188:242.7, 189:244.7, 190:246.7,
+  191:248.7, 192:250.7, 193:252.7, 194:254.7, 195:256.7, 196:258.7,
+  197:260.7, 198:262.7, 199:264.7, 200:266.7
+};
+
 function getPctPago(p) {
-  if (p < 80)    return 0;
-  if (p >= 200)  return 266.7;
-  if (p <= 100)  return 50 + (p-80)*2.5;
-  return 100 + (p-100)*1.333;
+  if (p < 79)   return 0;
+  if (p >= 200) return 266.7;
+  const floor = Math.floor(p);
+  const ceil  = Math.ceil(p);
+  if (floor === ceil) return TABLA_PAGO[floor] ?? 0;
+  // Interpolate between two integer points
+  const lo = TABLA_PAGO[floor] ?? 0;
+  const hi = TABLA_PAGO[ceil]  ?? lo;
+  const frac = p - floor;
+  return lo + (hi - lo) * frac;
 }
 
 // ── Calidad score by TPV ──
@@ -1813,9 +1943,8 @@ function renderCalc() {
   renderFastWeekly();
   calcIncentivos();
   renderPortfolioHistory();
+  initSimulator();
 }
-
-// ── Seller card with M0+M1 periods ──
 function renderTpvList() {
   if(currentView !== "calc") return;
   if(document.getElementById('c-mes')?.value) setCD('mes',document.getElementById('c-mes').value);
@@ -1829,8 +1958,18 @@ function renderTpvList() {
   const m1Start=`${prevYear}-${String(prevMonth).padStart(2,'0')}`;
 
   const adquiridos=prospects.filter(p=>p.status==='Adquirida');
-  const m0sellers=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m0Start));
-  const m1sellers=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m1Start));
+  const m0sellers=adquiridos.filter(p=>{
+    const sd=getSellerData(p.id);
+    if(sd.faseOverride==='m0') return true;
+    if(sd.faseOverride==='m1') return false;
+    return (p.acqDate||p.last||'').startsWith(m0Start);
+  });
+  const m1sellers=adquiridos.filter(p=>{
+    const sd=getSellerData(p.id);
+    if(sd.faseOverride==='m1') return true;
+    if(sd.faseOverride==='m0') return false;
+    return (p.acqDate||p.last||'').startsWith(m1Start);
+  });
 
   const today=new Date();
   const fmt=n=>`$${Math.round(n).toLocaleString('es-MX')}`;
@@ -1880,10 +2019,11 @@ function renderTpvList() {
       const periodYear = period==='m0'?sellerM0Year:sellerM1Year;
       const periodMonth= period==='m0'?sellerM0Month:sellerM1Month;
       const days=daysInMonth(periodYear,periodMonth);
-      const tpvData=period==='m0'?(sd.tpvM0||{}):(sd.tpvM1||{});
+      const tpvData = period==='m0'?(sd.tpvM0||{}):(sd.tpvM1||{});
       const todayDay=(today.getFullYear()===periodYear&&today.getMonth()+1===periodMonth)?today.getDate():days;
       const rows=[];
       const lockedBg = 'background:#F5F5F5;opacity:.55;cursor:not-allowed;pointer-events:none;';
+
       for(let d=1;d<=days;d++){
         const val=tpvData[d]||'';
         const isPast=d<=todayDay;
@@ -1895,13 +2035,30 @@ function renderTpvList() {
           <div style="font-size:11px;color:var(--text3);flex-shrink:0;">$</div>
           <input id="day_${p.id}_${period}_${d}" type="text" inputmode="decimal" placeholder="0.00" value="${val}"
             style="${inputStyle}"
-            ${readOnly ? 'readonly disabled' : `oninput="updateSellerTpv(${p.id},'${period}',${d},this.value)"
+            ${readOnly ? 'readonly disabled' : `
+            oninput="updateSellerTpv(${p.id},'${period}',${d},this.value)"
             onkeydown="if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();const n=document.getElementById('day_${p.id}_${period}_${d+1}');if(n){n.focus();n.select();}}"
             onblur="if(this.value){const n=document.getElementById('day_${p.id}_${period}_${d+1}');if(n&&!n.value)setTimeout(()=>{n.focus();n.select();},80);}"`}>
         </div>`);
       }
-      const header = readOnly ? `<div style="padding:6px 16px;background:#FEF3C7;font-size:11px;color:#92400E;border-bottom:1px solid var(--border);">🔒 Bloqueado — seller ya en M1, datos de M0 de solo lectura</div>` : '';
-      return `<div style="background:var(--bg);">${header}<div style="padding:8px 16px 12px;">${rows.join('')}</div></div>`;
+
+      // Single MSI field at the bottom — stored as key 0, sums into TPV total
+      const msiVal = tpvData[0]||'';
+      const msiStyle = readOnly
+        ? `flex:1;padding:5px 8px;border:1px solid var(--border-s);border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;text-align:right;${lockedBg}`
+        : `flex:1;padding:5px 8px;border:1px solid ${msiVal?'#FDE68A':'var(--border-s)'};border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;text-align:right;background:${msiVal?'#FFFBEB':'var(--bg)'};font-weight:${msiVal?'600':'400'};`;
+
+      const msiRow = `<div style="display:flex;align-items:center;gap:6px;padding:6px 0 2px;border-top:2px dashed #FDE68A;margin-top:4px;">
+        <div style="font-size:11px;font-weight:700;color:#B45309;width:28px;flex-shrink:0;">MSI</div>
+        <div style="font-size:11px;color:#B45309;flex-shrink:0;">$</div>
+        <input id="day_${p.id}_${period}_0" type="text" inputmode="decimal" placeholder="Total MSI del mes" value="${msiVal}"
+          style="${msiStyle}"
+          ${readOnly ? 'readonly disabled' : `oninput="updateSellerTpv(${p.id},'${period}',0,this.value)"`}>
+      </div>
+      <div style="font-size:10px;color:#92400E;padding:1px 0 4px;margin-left:34px;">Suma al TPV del período</div>`;
+
+      const header = readOnly ? `<div style="padding:6px 16px;background:#FEF3C7;font-size:11px;color:#92400E;border-bottom:1px solid var(--border);">🔒 Solo lectura — M0 bloqueado en contexto M1</div>` : '';
+      return `<div style="background:var(--bg);">${header}<div style="padding:8px 16px 12px;">${rows.join('')}${msiRow}</div></div>`;
     }
 
     const isM0Open = getCD(`open_${p.id}_m0`,'false')==='true';
@@ -1916,7 +2073,21 @@ function renderTpvList() {
       <div style="padding:12px 16px;">
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
           <div style="flex:1;min-width:0;">
-            <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">${p.name}</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <div style="font-size:16px;font-weight:700;color:var(--text);">${p.name}</div>
+              <!-- Fase badge + toggle -->
+              <div style="display:flex;align-items:center;gap:4px;margin-left:auto;">
+                <span style="font-size:10px;font-weight:700;color:${section==='m0'?'var(--s-cal)':'var(--s-ace)'};background:${section==='m0'?'var(--sb-cal)':'var(--sb-ace)'};padding:2px 8px;border-radius:10px;">
+                  ${section==='m0'?'M0 Adquisición':'M1 Calidad+TPV'}
+                </span>
+                <button title="Mover a ${section==='m0'?'M1':'M0'}" onclick="toggleFaseOverride(${p.id},'${section}')"
+                  style="border:1.5px solid ${section==='m0'?'var(--s-ace)':'var(--s-cal)'};background:transparent;border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;color:${section==='m0'?'var(--s-ace)':'var(--s-cal)'};font-family:'Inter',sans-serif;white-space:nowrap;">
+                  → Mover a ${section==='m0'?'M1':'M0'}
+                </button>
+                ${getSellerData(p.id).faseOverride ? `<button onclick="clearFaseOverride(${p.id})" title="Quitar clasificación manual"
+                  style="border:1px solid var(--border);background:transparent;border-radius:20px;padding:2px 6px;font-size:10px;cursor:pointer;color:var(--text3);font-family:'Inter',sans-serif;">↺ Auto</button>` : ''}
+              </div>
+            </div>
             <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
               <span style="font-size:13px;color:var(--text2);">ID: <input type="text" value="${custId}" placeholder="Cust ID"
                 style="border:none;border-bottom:1px dashed var(--border-s);background:transparent;font-size:13px;font-weight:600;font-family:'Inter',sans-serif;color:var(--text);width:100px;outline:none;"
@@ -2019,6 +2190,43 @@ function updateSellerTpv(id,period,day,val) {
   calcIncentivos();
 }
 
+function updateSellerMsi(id, period, day, monto, plazo) {
+  const sd = getSellerData(id);
+  const key = period==='m0' ? 'msiM0' : 'msiM1';
+  if(!sd[key]) sd[key] = {};
+  if(monto) {
+    sd[key][day] = JSON.stringify({monto: parseFloat(monto)||0, plazo: parseInt(plazo)||3});
+  } else {
+    delete sd[key][day];
+  }
+  setSellerData(id, sd);
+  // Update MSI select border color
+  const msiEl = document.getElementById(`msi_${id}_${period}_${day}`);
+  const selEl = document.getElementById(`msip_${id}_${period}_${day}`);
+  if(msiEl) msiEl.style.borderColor = monto ? '#FDE68A' : 'var(--border-s)';
+  if(selEl) selEl.style.borderColor = monto ? '#FDE68A' : 'var(--border-s)';
+  calcIncentivos();
+}
+
+function toggleFaseOverride(id, currentSection) {
+  const sd = getSellerData(id);
+  // If currently in M0, move to M1; if in M1, move to M0
+  sd.faseOverride = currentSection === 'm0' ? 'm1' : 'm0';
+  setSellerData(id, sd);
+  renderTpvList();
+  updateTpvSummary();
+  calcIncentivos();
+}
+
+function clearFaseOverride(id) {
+  const sd = getSellerData(id);
+  delete sd.faseOverride;
+  setSellerData(id, sd);
+  renderTpvList();
+  updateTpvSummary();
+  calcIncentivos();
+}
+
 function updateSellerMeta(id,field,val) {
   const sd=getSellerData(id);
   sd[field]=val;
@@ -2039,8 +2247,18 @@ function updateTpvSummary() {
   const prevYear =month===1?year-1:year;
   const m1Start=`${prevYear}-${String(prevMonth).padStart(2,'0')}`;
   const adquiridos=prospects.filter(p=>p.status==='Adquirida');
-  const m0=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m0Start));
-  const m1=adquiridos.filter(p=>(p.acqDate||p.last||'').startsWith(m1Start));
+  const m0=adquiridos.filter(p=>{
+    const sd=getSellerData(p.id);
+    if(sd.faseOverride==='m0') return true;
+    if(sd.faseOverride==='m1') return false;
+    return (p.acqDate||p.last||'').startsWith(m0Start);
+  });
+  const m1=adquiridos.filter(p=>{
+    const sd=getSellerData(p.id);
+    if(sd.faseOverride==='m1') return true;
+    if(sd.faseOverride==='m0') return false;
+    return (p.acqDate||p.last||'').startsWith(m1Start);
+  });
   const tipoMap={normal:1,pj:1.5,renta:1.5,pj_renta:2};
   const totalAdqPts=m0.reduce((s,p)=>{
     const sd=getSellerData(p.id);
@@ -2052,13 +2270,26 @@ function updateTpvSummary() {
     const acc=Object.values(getSellerData(p.id).tpvM1||{}).reduce((a,v)=>a+(parseFloat(v)||0),0);
     return s+calidadScore(acc);
   },0);
-  const totalTpv=m1.reduce((s,p)=>{
+
+  // Manual TPV mode: m0m1, m1only, m0only
+  const tpvMode = document.getElementById('tpv-mode')?.value || 'm0m1';
+  const fmt=n=>`$${Math.round(n).toLocaleString('es-MX')}`;
+  const tpvM1 = m1.reduce((s,p)=>{
     return s+Object.values(getSellerData(p.id).tpvM1||{}).reduce((a,v)=>a+(parseFloat(v)||0),0);
   },0);
+  const tpvM0sum = m0.reduce((s,p)=>{
+    return s+Object.values(getSellerData(p.id).tpvM0||{}).reduce((a,v)=>a+(parseFloat(v)||0),0);
+  },0);
+  const totalTpv = tpvMode==='m1only' ? tpvM1 :
+                   tpvMode==='m0only' ? tpvM0sum : tpvM1 + tpvM0sum;
+  const tpvLabel = tpvMode==='m1only' ? 'TPV M1' :
+                   tpvMode==='m0only' ? 'TPV M0' : 'TPV M0+M1';
+  const detalle = tpvMode==='m0m1' && (tpvM0sum>0||tpvM1>0)
+    ? ` <span style="font-size:10px;color:var(--text3);">(M1: ${fmt(tpvM1)} + M0: ${fmt(tpvM0sum)})</span>` : '';
+
   const metaAdq=getMetaAdq(mes),metaCal=getMetaCal(mes),metaTpv=getMetaTpv(mes);
-  const fmt=n=>`$${Math.round(n).toLocaleString('es-MX')}`;
   const el=document.getElementById('tpv-summary');
-  if(el) el.innerHTML=`Adq: <span style="color:var(--s-cal)">${totalAdqPts.toFixed(1)}</span>/${metaAdq} &nbsp;·&nbsp; Cal: <span style="color:var(--s-ace)">${totalCalPts.toFixed(1)}</span>/${metaCal} &nbsp;·&nbsp; TPV M1: <span style="color:var(--s-adq)">${fmt(totalTpv)}</span>/${fmt(metaTpv)}`;
+  if(el) el.innerHTML=`Adq: <span style="color:var(--s-cal)">${totalAdqPts.toFixed(1)}</span>/${metaAdq} &nbsp;·&nbsp; Cal: <span style="color:var(--s-ace)">${totalCalPts.toFixed(1)}</span>/${metaCal} &nbsp;·&nbsp; ${tpvLabel}: <span style="color:var(--s-adq)">${fmt(totalTpv)}</span>/${fmt(metaTpv)}${detalle}`;
   window._adqPts=totalAdqPts; window._calPts=totalCalPts; window._tpvM1=totalTpv;
   window._metaAdq=metaAdq; window._metaCal=metaCal; window._metaTpv=metaTpv;
 }
@@ -2106,6 +2337,7 @@ function calcIncentivos() {
   let wAdq,wCal,wTpv;
   if(rm===0){ wAdq=pctAdq*0.40; wCal=0; wTpv=pctTpv*0.60; }
   else       { wAdq=pctAdq*0.20; wCal=pctCal*0.50; wTpv=pctTpv*0.30; }
+  const tpvLabel = rm>=1 ? 'TPV M0+M1' : 'TPV M0';
   const totalCump=wAdq+wCal+wTpv;
   const cumplFinal=totalCump+totalExtras;
   const pctPago=getPctPago(cumplFinal);
@@ -2132,12 +2364,12 @@ function calcIncentivos() {
 
   // Metric cards
   const metricCols=rm===0?[
-    {label:'Adq M0',    val:`${totalAdqPts.toFixed(1)} pts`,meta:`${metaAdq}`,pct:pctAdq,w:'40%'},
-    {label:'TPV M0',    val:fmt(totalTpv),                  meta:fmt(metaTpv),pct:pctTpv,w:'60%'},
+    {label:'Adq M0',        val:`${totalAdqPts.toFixed(1)} pts`,meta:`${metaAdq}`,pct:pctAdq,w:'40%'},
+    {label:'TPV M0',        val:fmt(totalTpv),                  meta:fmt(metaTpv),pct:pctTpv,w:'60%'},
   ]:[
-    {label:'Adq M0',    val:`${totalAdqPts.toFixed(1)} pts`,meta:`${metaAdq}`,pct:pctAdq,w:'20%'},
-    {label:'Calidad M1',val:`${totalCalPts.toFixed(1)} pts`,meta:`${metaCal}`,pct:pctCal,w:'50%'},
-    {label:'TPV M1',    val:fmt(totalTpv),                  meta:fmt(metaTpv),pct:pctTpv,w:'30%'},
+    {label:'Adq M0',        val:`${totalAdqPts.toFixed(1)} pts`,meta:`${metaAdq}`,pct:pctAdq,w:'20%'},
+    {label:'Calidad M1',    val:`${totalCalPts.toFixed(1)} pts`,meta:`${metaCal}`,pct:pctCal,w:'50%'},
+    {label:tpvLabel,        val:fmt(totalTpv),                  meta:fmt(metaTpv),pct:pctTpv,w:'30%'},
   ];
   const rmEl=document.getElementById('result-metrics');
   if(rmEl) rmEl.innerHTML=metricCols.map(m=>{const c=col(m.pct);return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;">
@@ -2327,7 +2559,262 @@ function renderPortfolioHistory() {
 }
 
 
-// ── Tasas Naturales ──
+// ── Simulador de incentivos ──
+const SIM_KEY = 'sim_ramp_targets';
+
+function getSimTargets() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SIM_KEY)||'null');
+    if (saved && saved.length) return saved;
+  } catch(e){}
+  // Default: copy from RAMP_TARGETS with months
+  return RAMP_TARGETS.map((t,i) => {
+    const [sy,sm] = RAMP_START.split('-').map(Number);
+    const month = sm + i > 12 ? sm + i - 12 : sm + i;
+    const year  = sm + i > 12 ? sy + 1 : sy;
+    return {...t, month:`${year}-${String(month).padStart(2,'0')}`};
+  });
+}
+
+function saveSimTargets(targets) {
+  localStorage.setItem(SIM_KEY, JSON.stringify(targets));
+}
+
+function renderSimRampTable() {
+  const el = document.getElementById('sim-ramp-table');
+  if (!el) return;
+  const targets = getSimTargets();
+  const MN = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const fmt = n => `$${Math.round(n).toLocaleString('es-MX')}`;
+
+  el.innerHTML = targets.map((t, i) => {
+    const [y,m] = t.month.split('-').map(Number);
+    const mesLabel = `${t.label} · ${MN[m-1]} ${y}`;
+    const bg = i % 2 === 0 ? 'var(--surface)' : 'var(--bg)';
+    return `<tr style="border-bottom:1px solid var(--border);background:${bg};">
+      <td style="padding:8px 12px;font-weight:600;">${mesLabel}</td>
+      <td style="padding:8px 12px;text-align:center;">
+        <input type="number" value="${t.sellers}" min="0" max="20"
+          style="width:54px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;"
+          oninput="updateSimTarget(${i},'sellers',this.value)">
+      </td>
+      <td style="padding:8px 12px;text-align:center;">
+        <input type="number" value="${t.calidad}" min="0" max="20" step="0.5"
+          style="width:54px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;"
+          oninput="updateSimTarget(${i},'calidad',this.value)">
+      </td>
+      <td style="padding:8px 12px;text-align:center;">
+        <input type="number" value="${t.tpvMeta}" min="0"
+          style="width:90px;text-align:center;padding:4px;border:1px solid var(--border);border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;"
+          oninput="updateSimTarget(${i},'tpvMeta',this.value)">
+      </td>
+      <td style="padding:8px 12px;text-align:center;font-weight:700;color:#009EE3;">${fmt(BONO_VARIABLE)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateSimTarget(idx, field, val) {
+  const targets = getSimTargets();
+  targets[idx][field] = parseFloat(val)||0;
+  saveSimTargets(targets);
+  runSimulator();
+}
+
+function runSimulator() {
+  const mes    = document.getElementById('sim-mes')?.value || '2026-06';
+  const adq    = parseFloat(document.getElementById('sim-adq')?.value)||0;
+  const cal    = parseFloat(document.getElementById('sim-cal')?.value)||0;
+  const tpv    = parseFloat(document.getElementById('sim-tpv')?.value)||0;
+  const extras = parseFloat(document.getElementById('sim-extras')?.value)||0;
+
+  // Get targets for selected month from editable table
+  const targets = getSimTargets();
+  const rm      = getRampMonth(mes);
+  const idx     = Math.min(rm, targets.length-1);
+  const target  = targets[Math.max(0,idx)];
+
+  const metaAdq = target.sellers;
+  const metaCal = target.calidad;
+  const metaTpv = target.tpvMeta;
+
+  // Calculate percentages
+  const pctAdq = Math.min(200, metaAdq > 0 ? (adq/metaAdq)*100 : 0);
+  const pctCal = Math.min(200, metaCal > 0 ? (cal/metaCal)*100 : 0);
+  const pctTpv = Math.min(200, metaTpv > 0 ? (tpv/metaTpv)*100 : 0);
+
+  // Weights: M0 = 40% adq + 60% tpv (no calidad); M1+ = 20% adq + 50% cal + 30% tpv
+  let base;
+  if (rm === 0) {
+    base = pctAdq*0.40 + pctTpv*0.60;
+  } else {
+    base = pctAdq*0.20 + pctCal*0.50 + pctTpv*0.30;
+  }
+  const cumpl   = base + extras;
+  const pctPago = getPctPago(cumpl);
+  const bono    = cumpl >= 80 ? BONO_VARIABLE * pctPago/100 : 0;
+  const ingreso = 29000 + bono;
+
+  const fmt  = n => `$${Math.round(n).toLocaleString('es-MX')}`;
+  const pf   = n => `${n.toFixed(1)}%`;
+  const col  = p => p >= 100 ? '#00A650' : p >= 80 ? '#009EE3' : '#E53935';
+  const MN2  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const [y,m] = mes.split('-').map(Number);
+
+  // What's missing to reach 100%?
+  const gaps = [];
+  if (adq < metaAdq) gaps.push(`• ${metaAdq - adq} sellers más en adquisición`);
+  if (rm > 0 && cal < metaCal) gaps.push(`• ${(metaCal - cal).toFixed(1)} pts más de calidad`);
+  if (tpv < metaTpv) gaps.push(`• ${fmt(metaTpv - tpv)} más de TPV`);
+
+  // Scenario projections
+  const scenarios = [
+    {label:'Pesimista (60%)',  adqP:metaAdq*.6, calP:metaCal*.6, tpvP:metaTpv*.6},
+    {label:'Base (80%)',       adqP:metaAdq*.8, calP:metaCal*.8, tpvP:metaTpv*.8},
+    {label:'Meta (100%)',      adqP:metaAdq,    calP:metaCal,    tpvP:metaTpv},
+    {label:'Excelente (120%)', adqP:metaAdq*1.2,calP:metaCal*1.2,tpvP:metaTpv*1.2},
+  ].map(s => {
+    const pa = Math.min(200, metaAdq>0?(s.adqP/metaAdq)*100:0);
+    const pc = Math.min(200, metaCal>0?(s.calP/metaCal)*100:0);
+    const pt = Math.min(200, metaTpv>0?(s.tpvP/metaTpv)*100:0);
+    const b  = rm===0 ? pa*0.40+pt*0.60 : pa*0.20+pc*0.50+pt*0.30;
+    const pp = getPctPago(b);
+    const bn = b>=80 ? BONO_VARIABLE*pp/100 : 0;
+    return {...s, cumpl:b, bono:bn, ingreso:29000+bn};
+  });
+
+  document.getElementById('sim-result').innerHTML = `
+    <!-- Main result -->
+    <div style="background:linear-gradient(135deg,#003087,#009EE3);border-radius:var(--rs);padding:16px 20px;margin-bottom:14px;">
+      <div style="font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">
+        Simulación · ${target.label} · ${MN2[m-1]} ${y} · Metas: ${metaAdq} sellers · ${metaCal} pts cal · ${fmt(metaTpv)} TPV
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;align-items:start;">
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px;">Cumplimiento</div>
+          <div style="font-size:30px;font-weight:800;color:${col(cumpl)};">${pf(cumpl)}</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.4);">${cumpl>=80?'✓ Califica':'✗ Mín 80%'}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px;">% de Pago</div>
+          <div style="font-size:24px;font-weight:700;color:#FFE600;">${pf(pctPago)}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px;">Bono estimado</div>
+          <div style="font-size:24px;font-weight:700;color:${cumpl>=80?'#A7F3D0':'#FCA5A5'};">${fmt(bono)}</div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;margin-bottom:3px;">Ingreso total</div>
+          <div style="font-size:24px;font-weight:700;color:#fff;">${fmt(ingreso)}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Breakdown -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:14px;">
+      ${rm===0 ? `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">Adq M0 (40%)</div>
+          <div style="font-size:18px;font-weight:700;color:${col(pctAdq)};">${pf(pctAdq)}</div>
+          <div style="font-size:11px;color:var(--text3);">${adq} / ${metaAdq} sellers</div>
+          <div style="font-size:11px;font-weight:600;color:${col(pctAdq)};">→ ${pf(pctAdq*.4)} pond.</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">TPV M0 (60%)</div>
+          <div style="font-size:18px;font-weight:700;color:${col(pctTpv)};">${pf(pctTpv)}</div>
+          <div style="font-size:11px;color:var(--text3);">${fmt(tpv)} / ${fmt(metaTpv)}</div>
+          <div style="font-size:11px;font-weight:600;color:${col(pctTpv)};">→ ${pf(pctTpv*.6)} pond.</div>
+        </div>
+      ` : `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">Adq (20%)</div>
+          <div style="font-size:18px;font-weight:700;color:${col(pctAdq)};">${pf(pctAdq)}</div>
+          <div style="font-size:11px;color:var(--text3);">${adq} / ${metaAdq}</div>
+          <div style="font-size:11px;font-weight:600;color:${col(pctAdq)};">→ ${pf(pctAdq*.2)} pond.</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">Calidad (50%)</div>
+          <div style="font-size:18px;font-weight:700;color:${col(pctCal)};">${pf(pctCal)}</div>
+          <div style="font-size:11px;color:var(--text3);">${cal} / ${metaCal} pts</div>
+          <div style="font-size:11px;font-weight:600;color:${col(pctCal)};">→ ${pf(pctCal*.5)} pond.</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">TPV M1 (30%)</div>
+          <div style="font-size:18px;font-weight:700;color:${col(pctTpv)};">${pf(pctTpv)}</div>
+          <div style="font-size:11px;color:var(--text3);">${fmt(tpv)} / ${fmt(metaTpv)}</div>
+          <div style="font-size:11px;font-weight:600;color:${col(pctTpv)};">→ ${pf(pctTpv*.3)} pond.</div>
+        </div>
+      `}
+      ${extras !== 0 ? `
+        <div style="background:${extras>0?'#ECFDF5':'#FEF2F2'};border:1px solid ${extras>0?'#A7F3D0':'#FECACA'};border-radius:var(--rs);padding:10px 12px;">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;">Extras/FAST</div>
+          <div style="font-size:18px;font-weight:700;color:${extras>0?'#00A650':'#E53935'};">${extras>0?'+':''}${pf(extras)}</div>
+        </div>` : ''}
+    </div>
+
+    ${gaps.length && cumpl < 100 ? `
+    <div style="padding:10px 14px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:var(--rs);font-size:12px;color:#92400E;margin-bottom:14px;">
+      <strong>¿Qué falta para 100%?</strong><br>${gaps.join('<br>')}
+    </div>` : ''}
+
+    <!-- Scenarios table -->
+    <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Proyección por escenario</div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="background:var(--bg);">
+        <th style="padding:8px 12px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Escenario</th>
+        <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Cumpl.</th>
+        <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Bono</th>
+        <th style="padding:8px 12px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Ingreso total</th>
+      </tr></thead>
+      <tbody>
+        ${scenarios.map(s => `<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:9px 12px;font-weight:600;">${s.label}</td>
+          <td style="padding:9px 12px;text-align:center;font-weight:700;color:${col(s.cumpl)};">${pf(s.cumpl)}</td>
+          <td style="padding:9px 12px;text-align:center;color:${s.cumpl>=80?'#00A650':'#E53935'};font-weight:600;">${fmt(s.bono)}</td>
+          <td style="padding:9px 12px;text-align:center;font-weight:700;">${fmt(s.ingreso)}</td>
+        </tr>`).join('')}
+        <tr style="background:#FFFBEB;border-top:2px solid #FDE68A;">
+          <td style="padding:9px 12px;font-weight:700;color:#B45309;">Tu simulación</td>
+          <td style="padding:9px 12px;text-align:center;font-weight:800;color:${col(cumpl)};font-size:15px;">${pf(cumpl)}</td>
+          <td style="padding:9px 12px;text-align:center;font-weight:700;color:${bono>0?'#00A650':'#E53935'};">${fmt(bono)}</td>
+          <td style="padding:9px 12px;text-align:center;font-weight:800;font-size:15px;">${fmt(ingreso)}</td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
+function initSimulator() {
+  renderSimRampTable();
+  runSimulator();
+  // Render tabla de comisiones reference
+  const tbEl = document.getElementById('tabla-comisiones-ref');
+  if (tbEl && !tbEl.innerHTML) {
+    const entries = Object.entries(TABLA_PAGO).map(([k,v])=>({p:parseInt(k),pago:v}));
+    const third = Math.ceil(entries.length/3);
+    const col1 = entries.slice(0, third);
+    const col2 = entries.slice(third, third*2);
+    const col3 = entries.slice(third*2);
+    const maxLen = Math.max(col1.length, col2.length, col3.length);
+    let html = '';
+    for(let i=0; i<maxLen; i++){
+      const c1=col1[i], c2=col2[i], c3=col3[i];
+      const isKey1 = c1 && (c1.p===80||c1.p===100||c1.p===150||c1.p===200);
+      const isKey2 = c2 && (c2.p===80||c2.p===100||c2.p===150||c2.p===200);
+      const isKey3 = c3 && (c3.p===80||c3.p===100||c3.p===150||c3.p===200);
+      const bg = i%2===0?'var(--bg)':'var(--surface)';
+      html+=`<tr style="background:${bg};">
+        <td style="padding:4px 10px;text-align:center;font-weight:${isKey1?700:400};color:${c1&&c1.p<80?'#E53935':c1&&c1.p>=100?'#00A650':'var(--text)'};">${c1?c1.p+'%':'—'}</td>
+        <td style="padding:4px 10px;text-align:center;font-weight:${isKey1?700:400};color:${c1&&c1.pago===0?'#E53935':c1&&c1.pago>=100?'#00A650':'var(--text2)'};">${c1?c1.pago+'%':'—'}</td>
+        <td style="padding:4px 10px;text-align:center;font-weight:${isKey2?700:400};color:${c2&&c2.p>=100?'#00A650':'var(--text)'};">${c2?c2.p+'%':'—'}</td>
+        <td style="padding:4px 10px;text-align:center;font-weight:${isKey2?700:400};color:${c2&&c2.pago>=100?'#00A650':'var(--text2)'};">${c2?c2.pago+'%':'—'}</td>
+        <td style="padding:4px 10px;text-align:center;font-weight:${isKey3?700:400};color:${c3&&c3.p>=100?'#00A650':'var(--text)'};">${c3?c3.p+'%':'—'}</td>
+        <td style="padding:4px 10px;text-align:center;font-weight:${isKey3?700:400};color:${c3&&c3.pago>=100?'#00A650':'var(--text2)'};">${c3?c3.pago+'%':'—'}</td>
+      </tr>`;
+    }
+    tbEl.innerHTML = html;
+  }
+}
+
+
 const CATALOGO_TASAS = [
   {
     "g": "A",
@@ -2781,151 +3268,430 @@ function getLinkRate(comp, liquidacion, tpvBand) {
 }
 
 
-function calcComisiones() {
-  const monto      = parseFloat(document.getElementById('c2-monto')?.value)||0;
-  const tipo       = document.getElementById('c2-tipo')?.value||'nat';
-  const tpv        = document.getElementById('c2-tpv')?.value||'0';
-  const msi        = parseInt(document.getElementById('c2-msi')?.value||'3');
-  const msiTipo    = document.getElementById('c2-msi-tipo')?.value||'especial';
-  const modalidad  = document.getElementById('c2-modalidad')?.value||'point';
-  const linkLiq    = document.getElementById('c2-link-liq')?.value||'D0';
-  if(monto<=0) return;
+// ── Tasas MP completas ──
+// Tasas Point por escalón TPV: [<30K, $30K-100K, $100K-299K, $300K-499K, >500K]
+const POINT_TIERS = [
+  {label:'< $30,000',      tpv:0,   td:3.49, tc:3.49, amex:3.49, intl:3.49},
+  {label:'$30K – $100K',  tpv:30,  td:3.20, tc:3.20, amex:3.20, intl:3.20},
+  {label:'$100K – $299K', tpv:100, td:2.99, tc:2.99, amex:2.99, intl:2.99},
+  {label:'$300K – $499K', tpv:300, td:2.79, tc:2.79, amex:2.79, intl:2.79},
+  {label:'> $500K',       tpv:500, td:2.49, tc:2.49, amex:2.79, intl:2.79},
+];
 
-  const fmt = n=>`$${n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-  const pf  = n=>`${n.toFixed(2)}%`;
-  const ROW = (c,label,rate,fee,net,diffVsMP,isMp,na=false)=>{
-    const bg = isMp?'#FFFBEB':na?'var(--bg)':'var(--surface)';
-    const badge = isMp?'<span style="background:#FFE600;color:#003087;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:6px;">✓ MP</span>':'';
-    return `<tr style="border-bottom:1px solid var(--border);background:${bg};${na?'opacity:.5':''}">
-      <td style="padding:10px 14px;">
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div style="width:28px;height:28px;border-radius:6px;background:${c.color};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#fff;">${c.logo}</div>
-          <span style="font-size:13px;font-weight:${isMp?700:500};">${c.name}${badge}${label}</span>
-        </div>
-      </td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${na?'var(--text3)':c.color};">${na?'N/D':pf(rate)}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${na?'var(--text3)':'#E53935'};">${na?'—':fmt(fee)}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:700;color:${na?'var(--text3)':'#065F46'};">${na?'—':fmt(net)}</td>
-      <td style="padding:10px 14px;text-align:center;font-weight:600;color:${diffVsMP===null?'var(--text3)':diffVsMP>0?'#E53935':'#00A650'};">${isMp?'—':na?'N/D':diffVsMP>0?`+${fmt(diffVsMP)} más caro`:`${fmt(Math.abs(diffVsMP))} más barato`}</td>
-    </tr>`;
-  };
+// Link de Pago tasas por escalón TPV: D0, D7, D30, D3(Oxxo)
+const LINK_TIERS = [
+  {label:'< $30,000',      tpv:0,   D0:3.49, D7:3.20, D30:2.95, D3:3.79},
+  {label:'$30K – $100K',  tpv:30,  D0:3.20, D7:2.99, D30:2.70, D3:3.79},
+  {label:'$100K – $299K', tpv:100, D0:2.99, D7:2.70, D30:2.50, D3:3.79},
+  {label:'$300K – $499K', tpv:300, D0:2.79, D7:2.50, D30:2.30, D3:3.79},
+  {label:'> $500K',       tpv:500, D0:2.49, D7:2.30, D30:2.10, D3:3.79},
+];
 
-  const THEAD = (title)=>`<table style="width:100%;border-collapse:collapse;">
-    <thead><tr style="background:var(--bg);">
-      <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Empresa</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Tasa</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Comisión</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Recibes</th>
-      <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">vs MP</th>
-    </tr></thead><tbody>`;
-
-  // ── Toggle Link liquidacion selector ──
-  const linkRow = document.getElementById('c2-link-row');
-  if(linkRow) linkRow.style.display = modalidad==='link'?'':'none';
-
-  // ── Comisión TD/TC o Link de Pago ──
-  let tdtcRows;
-  if(modalidad==='link'){
-    tdtcRows = COMPETIDORES.map(c=>{
-      const rate = getLinkRate(c,'D0',tpv); // only MP has link
-      const fee  = rate!==null ? monto*rate/100 + (c.link?.linkFee||0) : null;
-      const net  = fee!==null  ? monto-fee : null;
-      return {c, rate, fee, net};
-    }).sort((a,b)=>{
-      if(a.fee===null) return 1; if(b.fee===null) return -1; return a.fee-b.fee;
-    });
-    // For link, show all 4 liquidation options for MP
-    const mp = COMPETIDORES[0];
-    const linkTypes = [
-      {key:'D0',label:' · Liberación inmediata (D0)'},
-      {key:'D7',label:' · Liberación D+7'},
-      {key:'D30',label:' · Liberación D+30'},
-      {key:'D3',label:' · Oxxo/Efectivo (D+3)'},
-    ];
-    let linkHtml = THEAD('Link de Pago');
-    let mpD0fee = null;
-    linkTypes.forEach((lt,i)=>{
-      const rate = getLinkRate(mp, lt.key, tpv);
-      if(rate===null) return;
-      const fee  = monto*rate/100 + (mp.link.linkFee||0);
-      const net  = monto-fee;
-      if(i===0) mpD0fee=fee;
-      const diff = i===0?null:fee-mpD0fee;
-      linkHtml += ROW(mp, lt.label, rate, fee, net, i===0?null:diff, i===0);
-    });
-    linkHtml += '</tbody></table>';
-    document.getElementById('c2-result-tdtc').innerHTML = linkHtml;
-    document.getElementById('c2-result-tdtc-label').textContent = '🔗 Link de Pago — Opciones de liquidación';
-  } else {
-    // Point / Terminal
-    tdtcRows = COMPETIDORES.map(c=>{
-      const rate=getTdTcRate(c,tipo,tpv);
-      const fee=monto*rate/100;
-      return {c,rate,fee,net:monto-fee};
-    }).sort((a,b)=>a.fee-b.fee);
-    const mpRow=tdtcRows.find(r=>r.c.id==='mp');
-    let html=THEAD('TD/TC');
-    tdtcRows.forEach(r=>{
-      html+=ROW(r.c,'',r.rate,r.fee,r.net,r.c.id==='mp'?null:r.fee-mpRow.fee,r.c.id==='mp');
-    });
-    html+='</tbody></table>';
-    document.getElementById('c2-result-tdtc').innerHTML=html;
-    document.getElementById('c2-result-tdtc-label').textContent='💳 Comparativa — Comisión por transacción (TD/TC)';
-  }
-
-  // ── MSI ──
-  const msiRows = COMPETIDORES.map(c=>{
-    const table = msiTipo==='especial'&&c.msi.especial ? c.msi.especial : c.msi.normal;
-    const rate  = table ? (table[msi]??null) : null;
-    const fee   = rate!==null ? monto*rate/100 : null;
-    return {c, rate, fee, net:fee!==null?monto-fee:null};
-  }).sort((a,b)=>{
-    if(a.fee===null) return 1; if(b.fee===null) return -1; return a.fee-b.fee;
-  });
-  const mpMsi = msiRows.find(r=>r.c.id==='mp');
-  let msiHtml = THEAD('MSI');
-  msiRows.forEach(r=>{
-    const na=r.rate===null;
-    msiHtml+=ROW(r.c,'',r.rate??0,r.fee??0,r.net??0,
-      r.c.id==='mp'||na?null:r.fee-mpMsi.fee, r.c.id==='mp', na);
-  });
-  msiHtml+='</tbody></table>';
-  document.getElementById('c2-result-msi').innerHTML=msiHtml;
-
-  // ── Ahorro summary ──
-  const mpTdtc  = tdtcRows?.find?.(r=>r.c.id==='mp');
-  const competitors_tdtc = tdtcRows?.filter?.(r=>r.c.id!=='mp'&&r.fee!=null)||[];
-  const avgTdtc = competitors_tdtc.length?competitors_tdtc.reduce((s,r)=>s+r.fee,0)/competitors_tdtc.length:null;
-  const savTdtc = avgTdtc&&mpTdtc?.fee!=null?avgTdtc-mpTdtc.fee:null;
-
-  const competitors_msi = msiRows.filter(r=>r.c.id!=='mp'&&r.fee!=null);
-  const avgMsi = competitors_msi.length?competitors_msi.reduce((s,r)=>s+r.fee,0)/competitors_msi.length:null;
-  const savMsi = avgMsi&&mpMsi?.fee!=null?avgMsi-mpMsi.fee:null;
-
-  const savEl=document.getElementById('c2-ahorro');
-  if(savEl) savEl.innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-      <div style="padding:14px 16px;background:linear-gradient(135deg,#003087,#009EE3);border-radius:var(--rs);color:#fff;">
-        <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro promedio vs competencia</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;">${modalidad==='link'?'Link de Pago':'TD/TC'}</div>
-        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savTdtc!=null?(savTdtc>0?fmt(savTdtc):'MP es más caro'):'—'}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">por transacción de ${fmt(monto)}</div>
-      </div>
-      <div style="padding:14px 16px;background:linear-gradient(135deg,#003087,#009EE3);border-radius:var(--rs);color:#fff;">
-        <div style="font-size:10px;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Ahorro promedio vs competencia</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;">MSI ${msi} meses (${msiTipo})</div>
-        <div style="font-size:22px;font-weight:800;color:#FFE600;">${savMsi!=null?(savMsi>0?fmt(savMsi):'MP es más caro'):'—'}</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;">por transacción de ${fmt(monto)}</div>
-      </div>
-    </div>
-    <div style="margin-top:12px;padding:10px 14px;background:var(--bg);border-radius:var(--rs);font-size:12px;color:var(--text2);">
-      💡 <strong>Tip:</strong> Con ${fmt(monto)} a ${msi} meses, el comercio paga
-      <strong style="color:#009EE3;">${mpMsi?.fee!=null?fmt(mpMsi.fee):'N/D'} con MP</strong>
-      ${competitors_msi.length?`vs hasta ${fmt(Math.max(...competitors_msi.map(r=>r.fee)))} con la competencia`:''}.
-      ${msiTipo==='especial'?'<span style="color:#00A650;font-weight:600;">✓ Tasa especial aplicada</span>':''}
-    </div>`;
+function getPointRate(forma, tpvBand) {
+  const tpvVal = parseInt(tpvBand||'0');
+  let tier = POINT_TIERS[0];
+  for(const t of POINT_TIERS){ if(tpvVal >= t.tpv) tier = t; }
+  return tier[forma] ?? tier.tc;
 }
 
+function getLinkTieredRate(plazo, tpvBand) {
+  const tpvVal = parseInt(tpvBand||'0');
+  let tier = LINK_TIERS[0];
+  for(const t of LINK_TIERS){ if(tpvVal >= t.tpv) tier = t; }
+  return tier[plazo] ?? tier.D0;
+}
+
+const MP_RATES = {
+  point: {
+    cobro: {
+      tc:   {instante:{rate:null,fee:0}}, // rate comes from POINT_TIERS dynamically
+      td:   {instante:{rate:null,fee:0}},
+      amex: {instante:{rate:null,fee:0}},
+      intl: {instante:{rate:null,fee:0}},
+    },
+    msi: {
+      general: {3:4.69,6:7.69,9:11.19,12:12.89,18:19.39,24:27.29},
+      especial:{3:3.49,6:5.99,9:8.99, 12:11.99,18:16.99,24:24.99},
+    }
+  },
+  tap: {
+    cobro: {
+      tc:  {instante:{rate:3.50,fee:0}},
+      td:  {instante:{rate:3.50,fee:0}},
+    },
+    msi: {
+      general: {3:4.69,6:7.69,9:11.19,12:12.89,18:19.39,24:27.29},
+      especial:{3:3.49,6:5.99,9:8.99, 12:11.99,18:16.99,24:24.99},
+    }
+  },
+  checkout: {
+    cobro: {
+      tc:   {instante:{rate:3.49,fee:4},'14días':{rate:3.19,fee:4},'30días':{rate:2.95,fee:4}},
+      td:   {instante:{rate:3.49,fee:4},'14días':{rate:3.19,fee:4},'30días':{rate:2.95,fee:4}},
+      spei: {instante:{rate:3.49,fee:4},'14días':{rate:3.19,fee:4}},
+      wallet:{instante:{rate:3.49,fee:4}},
+      vale: {instante:{rate:3.49,fee:4}},
+      oxxo: {'3días':{rate:3.79,fee:4}},
+      bnpl: {instante:{rate:1.21,fee:0}},
+    },
+    msi: {
+      general: {3:4.69,6:7.69,9:11.19,12:12.89,18:19.39,24:27.29},
+      especial:{3:3.49,6:5.99,9:8.99, 12:11.99,18:16.99,24:24.99},
+    }
+  },
+  link: {
+    cobro: {
+      tc:   {instante:{rate:null,fee:4},'7días':{rate:null,fee:4},'30días':{rate:null,fee:4},'3días':{rate:null,fee:4}},
+      td:   {instante:{rate:null,fee:4},'7días':{rate:null,fee:4},'30días':{rate:null,fee:4},'3días':{rate:null,fee:4}},
+      spei: {instante:{rate:null,fee:4},'7días':{rate:null,fee:4},'30días':{rate:null,fee:4}},
+      wallet:{instante:{rate:null,fee:4},'7días':{rate:null,fee:4},'30días':{rate:null,fee:4}},
+      vale: {instante:{rate:null,fee:4},'7días':{rate:null,fee:4},'30días':{rate:null,fee:4}},
+      oxxo: {'3días':{rate:null,fee:4}},
+      bnpl: {instante:{rate:null,fee:4},'7días':{rate:null,fee:4},'30días':{rate:null,fee:4}},
+    },
+    msi: {
+      general: {3:4.69,6:7.69,9:11.19,12:12.89,18:19.39,24:27.29},
+      especial:{3:3.49,6:5.99,9:8.99, 12:11.99,18:16.99,24:24.99},
+    }
+  }
+};
+
+const MEDIO_LABELS = {
+  tc:'Tarjeta de crédito', td:'Tarjeta de débito', spei:'Transferencia SPEI',
+  wallet:'Saldo MP Wallet', vale:'Vale de despensa', oxxo:'Oxxo / Efectivo',
+  amex:'AMEX', intl:'Tarjeta Internacional / Valeras',
+  bnpl:'Compra ahora, paga después'
+};
+
+const PLAZO_MAP = {instante:'D0','7días':'D7','30días':'D30','3días':'D3'};
+
+function calcComisiones() {
+  const monto    = parseFloat(document.getElementById('c2-monto')?.value)||0;
+  const medio    = document.getElementById('c2-modalidad')?.value||'point';
+  const forma    = document.getElementById('c2-forma')?.value||'tc';
+  const plazo    = document.getElementById('c2-plazo')?.value||'instante';
+  const tpvBand  = document.getElementById('c2-tpv-band')?.value||'0';
+  const useMsi   = document.getElementById('c2-use-msi')?.checked||false;
+  const msiN     = parseInt(document.getElementById('c2-msi')?.value||'3');
+  const msiTipo  = document.getElementById('c2-msi-tipo')?.value||'especial';
+  if(monto<=0) return;
+
+  const fmt2 = n=>`$${n.toLocaleString('es-MX',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+  const pf   = n=>`${n.toFixed(2)}%`;
+
+  // ── Resolve rate dynamically ──
+  let cobroRate, cobroFee;
+  if(medio==='point'){
+    cobroRate = getPointRate(forma, tpvBand);
+    cobroFee  = 0;
+  } else if(medio==='link'){
+    const plazoKey = PLAZO_MAP[plazo]||'D0';
+    cobroRate = getLinkTieredRate(plazoKey, tpvBand);
+    cobroFee  = 4;
+  } else {
+    const medioRates = MP_RATES[medio];
+    const plazoData  = medioRates?.cobro?.[forma]?.[plazo] || {rate:0,fee:0};
+    cobroRate = plazoData.rate;
+    cobroFee  = plazoData.fee;
+  }
+
+  // ── Update forma options ──
+  const formaEl = document.getElementById('c2-forma');
+  const medioFormas = Object.keys(MP_RATES[medio]?.cobro||{});
+  if(formaEl && formaEl.dataset.medio !== medio){
+    formaEl.innerHTML = medioFormas.map(f=>`<option value="${f}">${MEDIO_LABELS[f]||f}</option>`).join('');
+    formaEl.dataset.medio = medio;
+  }
+
+  // ── Update plazo options ──
+  const plazosEl = document.getElementById('c2-plazo');
+  let plazos;
+  if(medio==='point')       plazos=['instante'];
+  else if(medio==='link')   plazos=['instante','7días','30días','3días'];
+  else plazos = Object.keys(MP_RATES[medio]?.cobro?.[formaEl?.value||forma]||{instante:1});
+  if(plazosEl){
+    const curPlazo = plazosEl.value;
+    plazosEl.innerHTML = plazos.map(p=>`<option value="${p}"${p===curPlazo?' selected':''}>${p==='instante'?'Al instante':p.replace('días',' días')}</option>`).join('');
+  }
+
+  // ── Show/hide TPV band ──
+  const tpvRow = document.getElementById('c2-tpv-row');
+  const needsTpv = medio==='point'||medio==='link';
+  if(tpvRow) tpvRow.style.display = needsTpv?'':'none';
+
+  // ── MSI ──
+  const hasMsi = (forma==='tc'||forma==='amex') && medio!=='tap';
+  const msiSection = document.getElementById('c2-msi-section');
+  if(msiSection) msiSection.style.display = hasMsi?'':'none';
+  const msiRates = MP_RATES[medio]?.msi?.[msiTipo]||{};
+  const msiRate  = (useMsi&&hasMsi) ? (msiRates[msiN]??null) : null;
+
+  const cobroComision = monto*cobroRate/100 + cobroFee;
+  const msiComision   = msiRate!==null ? monto*msiRate/100 : 0;
+  const totalComision = cobroComision + msiComision;
+  const recibes       = monto - totalComision;
+
+  const medioLabel = medio==='point'?'Point':medio==='tap'?'Tap':medio==='checkout'?'Checkout':'Link de Pago';
+  const tpvLabels = {'0':'< $30K','30':'$30K-100K','100':'$100K-299K','300':'$300K-499K','500':'> $500K'};
+  const tpvText = needsTpv ? ` · TPV ${tpvLabels[tpvBand]||''}` : '';
+  const msiText = msiRate!==null ? ` · ${msiN}x MSI` : '';
+  const cuota   = msiRate!==null ? monto/msiN : null;
+
+  // ── Build result HTML ──
+  // Point table: AMEX/Intl/Valeras share same rate, no tiered pricing distinction shown separately
+  // (Points 1 & 2 handled in table below)
+
+  document.getElementById('c2-result-mp').innerHTML = `
+    <div style="overflow-x:auto;margin-bottom:16px;">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:#003087;color:#FFE600;">
+          <th style="padding:9px 12px;text-align:left;">Concepto</th>
+          <th style="padding:9px 12px;text-align:center;">%</th>
+          <th style="padding:9px 12px;text-align:right;">Monto</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:9px 12px;color:var(--text2);">Costo por cobro${cobroFee?` + $${cobroFee} fijo`:''}${needsTpv?` (escalón TPV)`:''}</td>
+            <td style="padding:9px 12px;text-align:center;font-weight:700;color:#009EE3;">${pf(cobroRate)}${cobroFee?` + $${cobroFee}`:''}</td>
+            <td style="padding:9px 12px;text-align:right;font-weight:700;color:#E53935;">-${fmt2(cobroComision)}</td>
+          </tr>
+          ${msiRate!==null?`<tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:9px 12px;color:var(--text2);">MSI ${msiN}x — Sobretasa ${msiTipo==='especial'?'★ especial':'general'}</td>
+            <td style="padding:9px 12px;text-align:center;font-weight:700;color:#B45309;">${pf(msiRate)}</td>
+            <td style="padding:9px 12px;text-align:right;font-weight:700;color:#E53935;">-${fmt2(msiComision)}</td>
+          </tr>`:''}
+          <tr style="background:#ECFDF5;font-weight:700;">
+            <td style="padding:9px 12px;color:#065F46;">Total recibes</td>
+            <td style="padding:9px 12px;text-align:center;color:#065F46;">${pf(100-totalComision/monto*100)}</td>
+            <td style="padding:9px 12px;text-align:right;font-size:16px;color:#00A650;">${fmt2(recibes)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tabla Point: TD/TC + AMEX/Intl/Valeras (unified) con % y $ (points 1 & 2) -->
+    ${needsTpv && medio==='point' ? `
+    <details style="margin-bottom:12px;">
+      <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#003087;padding:6px 0;">📋 Tabla completa Point por escalón TPV</summary>
+      <div style="overflow-x:auto;margin-top:8px;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead>
+            <tr style="background:#003087;color:#FFE600;">
+              <th style="padding:7px 8px;text-align:left;" rowspan="2">TPV mensual</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.3);" colspan="2">TD / TC</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.3);border-left:2px solid rgba(255,255,255,.2);" colspan="2">AMEX · Intl · Valeras</th>
+            </tr>
+            <tr style="background:#003087;color:#FFE600;">
+              <th style="padding:5px 8px;text-align:center;">%</th>
+              <th style="padding:5px 8px;text-align:center;">$ (${fmt2(monto)})</th>
+              <th style="padding:5px 8px;text-align:center;border-left:2px solid rgba(255,255,255,.2);">%</th>
+              <th style="padding:5px 8px;text-align:center;">$ (${fmt2(monto)})</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${POINT_TIERS.map(t=>{
+              const isActive = parseInt(tpvBand)===t.tpv;
+              const tcPesos  = monto*t.tc/100;
+              const intlPesos= monto*t.intl/100;
+              return `<tr style="border-bottom:1px solid var(--border);background:${isActive?'#FFFBEB':'var(--surface)'};">
+                <td style="padding:7px 8px;font-weight:${isActive?700:400};">${t.label}${isActive?' ←':''}</td>
+                <td style="padding:7px 8px;text-align:center;font-weight:700;color:#009EE3;">${t.tc}%</td>
+                <td style="padding:7px 8px;text-align:center;color:#E53935;font-weight:600;">-${fmt2(tcPesos)}</td>
+                <td style="padding:7px 8px;text-align:center;font-weight:700;color:#FF6E00;border-left:2px solid var(--border);">${t.intl}%</td>
+                <td style="padding:7px 8px;text-align:center;color:#E53935;font-weight:600;">-${fmt2(intlPesos)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        <div style="font-size:10px;color:var(--text3);padding:6px 2px;">* AMEX, Tarjetas Internacionales y Valeras comparten la misma tasa y no aplican para tasas especiales.</div>
+      </div>
+    </details>` : needsTpv && medio==='link' ? `
+    <!-- Tabla Link: % y $ por escalón y plazo (point 6) -->
+    <details style="margin-bottom:12px;">
+      <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#003087;padding:6px 0;">📋 Tabla completa Link de Pago por escalón TPV</summary>
+      <div style="overflow-x:auto;margin-top:8px;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead>
+            <tr style="background:#003087;color:#FFE600;">
+              <th style="padding:7px 8px;text-align:left;" rowspan="2">TPV mensual</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.3);" colspan="2">D0 Instante</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.3);" colspan="2">D7</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.3);" colspan="2">D30</th>
+              <th style="padding:7px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.3);" colspan="2">Oxxo / D3</th>
+            </tr>
+            <tr style="background:#003087;color:#FFE600;">
+              <th style="padding:5px 6px;text-align:center;">%</th><th style="padding:5px 6px;text-align:center;">$</th>
+              <th style="padding:5px 6px;text-align:center;">%</th><th style="padding:5px 6px;text-align:center;">$</th>
+              <th style="padding:5px 6px;text-align:center;">%</th><th style="padding:5px 6px;text-align:center;">$</th>
+              <th style="padding:5px 6px;text-align:center;">%</th><th style="padding:5px 6px;text-align:center;">$</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${LINK_TIERS.map(t=>{
+              const isActive = parseInt(tpvBand)===t.tpv;
+              const fee=4;
+              const calc=(r)=>monto*r/100+fee;
+              return `<tr style="border-bottom:1px solid var(--border);background:${isActive?'#FFFBEB':'var(--surface)'};">
+                <td style="padding:7px 8px;font-weight:${isActive?700:400};">${t.label}${isActive?' ←':''}</td>
+                <td style="padding:7px 8px;text-align:center;font-weight:700;color:#009EE3;">${t.D0}%+$4</td>
+                <td style="padding:7px 8px;text-align:center;color:#E53935;font-weight:600;">-${fmt2(calc(t.D0))}</td>
+                <td style="padding:7px 8px;text-align:center;font-weight:700;color:#009EE3;">${t.D7}%+$4</td>
+                <td style="padding:7px 8px;text-align:center;color:#E53935;font-weight:600;">-${fmt2(calc(t.D7))}</td>
+                <td style="padding:7px 8px;text-align:center;font-weight:700;color:#009EE3;">${t.D30}%+$4</td>
+                <td style="padding:7px 8px;text-align:center;color:#E53935;font-weight:600;">-${fmt2(calc(t.D30))}</td>
+                <td style="padding:7px 8px;text-align:center;font-weight:700;color:#FF6E00;">${t.D3}%+$4</td>
+                <td style="padding:7px 8px;text-align:center;color:#E53935;font-weight:600;">-${fmt2(calc(t.D3))}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </details>` : ''}
+
+    <!-- Tabla MSI: General vs Especial con % y $ -->
+    ${hasMsi ? `
+    <details style="margin-bottom:4px;">
+      <summary style="cursor:pointer;font-size:12px;font-weight:700;color:#003087;padding:6px 0;">📋 Tabla de sobretasas MSI — General vs Especial</summary>
+      <div style="overflow-x:auto;margin-top:8px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <thead><tr style="background:#003087;color:#FFE600;">
+            <th style="padding:7px 10px;">Meses</th>
+            <th style="padding:7px 10px;text-align:center;">★ Especial %</th>
+            <th style="padding:7px 10px;text-align:center;">★ Especial $</th>
+            <th style="padding:7px 10px;text-align:center;">General %</th>
+            <th style="padding:7px 10px;text-align:center;">General $</th>
+          </tr></thead>
+          <tbody>
+            ${[3,6,9,12,18,24].map(m=>{
+              const esp=MP_RATES[medio]?.msi?.especial?.[m];
+              const gen=MP_RATES[medio]?.msi?.general?.[m];
+              const isActive=useMsi&&hasMsi&&m===msiN;
+              return `<tr style="border-bottom:1px solid var(--border);background:${isActive?'#FFFBEB':'var(--surface)'};">
+                <td style="padding:7px 10px;font-weight:${isActive?700:400};">${m}x${isActive?' ←':''}</td>
+                <td style="padding:7px 10px;text-align:center;font-weight:700;color:#009EE3;">${esp!=null?pf(esp):'—'}</td>
+                <td style="padding:7px 10px;text-align:center;color:#E53935;font-weight:600;">${esp!=null?'-'+fmt2(monto*esp/100):'—'}</td>
+                <td style="padding:7px 10px;text-align:center;font-weight:600;color:var(--text2);">${gen!=null?pf(gen):'—'}</td>
+                <td style="padding:7px 10px;text-align:center;color:#E53935;">${gen!=null?'-'+fmt2(monto*gen/100):'—'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </details>` : ''}`;
+
+  // ── Simulation summary (point 3) — detailed breakdown below tables ──
+  const simEl = document.getElementById('c2-sim-summary');
+  if(simEl) simEl.innerHTML = `
+    <div style="margin-top:16px;border:2px solid #003087;border-radius:var(--rs);overflow:hidden;">
+      <!-- Header -->
+      <div style="background:#003087;color:#fff;padding:10px 16px;">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">
+          Simulación total · ${medioLabel} · ${MEDIO_LABELS[formaEl?.value||forma]||forma} · ${plazo==='instante'?'Al instante':plazo.replace('días',' días')}${tpvText}${msiText}
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:18px;font-weight:800;">Monto a cobrar: ${fmt2(monto)}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.5);">Los valores no incluyen IVA</span>
+        </div>
+      </div>
+      <!-- Desglose -->
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead><tr style="background:var(--bg);">
+          <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Concepto</th>
+          <th style="padding:8px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Tasa</th>
+          <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Monto</th>
+        </tr></thead>
+        <tbody>
+          <tr style="border-bottom:1px solid var(--border);">
+            <td style="padding:10px 14px;color:var(--text);">
+              <strong>Monto de cobro</strong>
+            </td>
+            <td style="padding:10px 14px;text-align:center;">—</td>
+            <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--text);">${fmt2(monto)}</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--border);background:var(--bg);">
+            <td style="padding:10px 14px;color:var(--text2);">
+              Comisión por cobro
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">
+                ${medioLabel} · ${MEDIO_LABELS[formaEl?.value||forma]||forma}${needsTpv?` · ${tpvLabels[tpvBand]||''} TPV`:''} · ${plazo==='instante'?'Al instante':plazo.replace('días',' días')}
+                ${cobroFee?` · Comisión fija $${cobroFee}`:''}</div>
+            </td>
+            <td style="padding:10px 14px;text-align:center;font-weight:700;color:#009EE3;">${pf(cobroRate)}${cobroFee?` + $${cobroFee}`:''}</td>
+            <td style="padding:10px 14px;text-align:right;font-weight:700;color:#E53935;">-${fmt2(cobroComision)}</td>
+          </tr>
+          ${msiRate!==null?`<tr style="border-bottom:1px solid var(--border);background:var(--bg);">
+            <td style="padding:10px 14px;color:var(--text2);">
+              Sobretasa MSI
+              <div style="font-size:11px;color:var(--text3);margin-top:2px;">${msiN} meses sin interés · Tasa ${msiTipo==='especial'?'★ especial':'general'} · Tu cliente paga ${msiN} cuotas de ${fmt2(cuota)}</div>
+            </td>
+            <td style="padding:10px 14px;text-align:center;font-weight:700;color:#B45309;">${pf(msiRate)}</td>
+            <td style="padding:10px 14px;text-align:right;font-weight:700;color:#E53935;">-${fmt2(msiComision)}</td>
+          </tr>`:''}
+          <tr style="border-bottom:2px solid #003087;">
+            <td style="padding:10px 14px;color:#E53935;font-weight:700;">
+              Total comisiones
+            </td>
+            <td style="padding:10px 14px;text-align:center;font-weight:700;color:#E53935;">${pf(totalComision/monto*100)}</td>
+            <td style="padding:10px 14px;text-align:right;font-weight:800;color:#E53935;font-size:15px;">-${fmt2(totalComision)}</td>
+          </tr>
+          <tr style="background:#ECFDF5;">
+            <td style="padding:12px 14px;color:#065F46;font-size:15px;font-weight:800;">
+              🔥 Total que recibes
+            </td>
+            <td style="padding:12px 14px;text-align:center;font-weight:700;color:#065F46;">${pf(recibes/monto*100)}</td>
+            <td style="padding:12px 14px;text-align:right;font-weight:800;color:#00A650;font-size:18px;">${fmt2(recibes)}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  // ── Competencia: only show for Point (points 4 & 5) ──
+  const compCard = document.getElementById('c2-comp-card');
+  if(compCard) compCard.style.display = medio==='point' ? '' : 'none';
+
+  if(medio==='point'){
+    // MP uses especial rates for competition section (point 5)
+    const mpCompRate = getPointRate(forma==='amex'||forma==='intl'?'intl':'tc', tpvBand);
+    const mpMsiEsp   = MP_RATES.point?.msi?.especial?.[msiN]??null;
+
+    document.getElementById('c2-result-comp').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:12px;">
+        <thead><tr style="background:var(--bg);">
+          <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Empresa</th>
+          <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Tasa TD/TC</th>
+          <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Comisión cobro</th>
+          ${useMsi&&hasMsi?`<th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">MSI ${msiN}x %</th>
+          <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Com. MSI $</th>`:''}
+          <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;border-bottom:1px solid var(--border);">Recibes</th>
+        </tr></thead>
+        <tbody>
+          ${COMPETIDORES.map(c=>{
+            const isMp = c.id==='mp';
+            // MP uses especial rate; others use normal (general)
+            const tdRate    = isMp ? mpCompRate : getTdTcRate(c,'nat','0');
+            const cComCobro = monto*tdRate/100;
+            const cMsiRate  = useMsi&&hasMsi ? (isMp ? mpMsiEsp : (c.msi?.normal?.[msiN]??null)) : null;
+            const cMsiCom   = cMsiRate!==null ? monto*cMsiRate/100 : 0;
+            const cNet      = monto - cComCobro - cMsiCom;
+            const bg        = isMp?'#FFFBEB':'var(--surface)';
+            const badge     = isMp?'<span style="background:#FFE600;color:#003087;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-left:4px;">★ Especial</span>':'';
+            return `<tr style="border-bottom:1px solid var(--border);background:${bg};">
+              <td style="padding:8px 10px;">
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <div style="width:22px;height:22px;border-radius:5px;background:${c.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#fff;">${c.logo}</div>
+                  <span style="font-weight:${isMp?700:400};">${c.name}${badge}</span>
+                </div>
+              </td>
+              <td style="padding:8px 10px;text-align:center;font-weight:700;color:${c.color};">${pf(tdRate)}</td>
+              <td style="padding:8px 10px;text-align:center;color:#E53935;font-weight:600;">-${fmt2(cComCobro)}</td>
+              ${useMsi&&hasMsi?`<td style="padding:8px 10px;text-align:center;font-weight:700;color:${cMsiRate!==null?c.color:'var(--text3)'};">${cMsiRate!==null?pf(cMsiRate):'N/D'}</td>
+              <td style="padding:8px 10px;text-align:center;color:${cMsiRate!==null?'#E53935':'var(--text3)'};">${cMsiRate!==null?'-'+fmt2(cMsiCom):'—'}</td>`:''}
+              <td style="padding:8px 10px;text-align:center;font-weight:700;color:#00A650;">${fmt2(cNet)}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>`;
+  }
+}
 
 function renderCalc2() {
   calcComisiones();
